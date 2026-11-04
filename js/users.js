@@ -71,8 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     usersTableBody.innerHTML = list.map(u => {
-      // Felismerjük mind a password_hash, mind a password mezőneveket
-      const pwdVal = u.password_hash || u.password || '';
+      const pwdVal = u.password || u.password_hash || '';
       return `
         <tr>
           <td><code>${u.username}</code></td>
@@ -133,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
     userIdInput.value = targetUser.id;
     usernameInput.value = targetUser.username || '';
     fullnameInput.value = targetUser.full_name || '';
-    passwordInput.value = targetUser.password_hash || targetUser.password || '';
+    passwordInput.value = targetUser.password || targetUser.password_hash || '';
     roleSelect.value = targetUser.role || 'assistant';
 
     userModalTitle.innerText = 'Felhasználó Szerkesztése';
@@ -141,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     usernameInput.focus();
   };
 
-  // 5. Form Mentés (Beszúrás vagy Frissítés)
+  // 5. Form Mentés (Beszúrás vagy Frissítés mindkét jelszó mezőt kitöltve)
   userForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -157,9 +156,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
+      // Mindkét lehetséges oszlopnevet feltöltjük, hogy elkerüljük a NOT NULL hibát
       const payload = {
         username: username,
         full_name: fullname,
+        password: password,
         password_hash: password,
         role: role
       };
