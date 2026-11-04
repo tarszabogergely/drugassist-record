@@ -1,102 +1,99 @@
 /**
- * DrugAssist Record - Username-based Auth & Session Management
+ * DrugAssist Record - Profiles Table Direct Authentication (No Reload)
  */
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
   const loginContainer = document.getElementById('login-container');
   const dashboardContainer = document.getElementById('dashboard-container');
-  const loginForm = document.getElementById('login-form');
   const loginUsername = document.getElementById('login-username');
   const loginPassword = document.getElementById('login-password');
+  const btnLoginSubmit = document.getElementById('btn-login-submit');
   const userDisplay = document.getElementById('user-email-display');
   const btnLogout = document.getElementById('btn-logout');
 
-  // Munkamenet ellenőrzése betöltéskor
-  await checkSession();
+  // Munkamenet ellenőrzése az oldal betöltésekor
+  checkSession();
 
-  // Bejelentkezés felhasználónévvel
-  if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const username = loginUsername.value.trim().toLowerCase();
-      const password = loginPassword.value.trim();
+  // Bejelentkezés gomb kattintás
+  if (btnLoginSubmit) {
+    btnLoginSubmit.addEventListener('click', async () => {
+      await performLogin();
+    });
+  }
 
-      if (!username || !password) {
-        alert('Kérjük, adja meg a felhasználónevet és a jelszót!');
-        return;
-      }
-
-      const submitBtn = loginForm.querySelector('button[type="submit"]');
-      submitBtn.disabled = true;
-      submitBtn.innerText = 'Bejelentkezés...';
-
-      try {
-        // 1. Felhasználónév alapján az e-mail és adatok lekérdezése a profiles táblából
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, username, full_name, role')
-          .eq('username', username)
-          .single();
-
-        if (profileError || !profile) {
-          alert('Hibás felhasználónév vagy jelszó!');
-          return;
-        }
-
-        // 2. Belső e-mail behelyettesítése
-        const mappedEmail = `${username}@drugassist.local`;
-
-        // 3. Supabase Auth Bejelentkezés
-        const { data, error: authError } = await supabase.auth.signInWithPassword({
-          email: mappedEmail,
-          password: password,
-        });
-
-        if (authError) {
-          alert('Hibás felhasználónév vagy jelszó!');
-        } else {
-          updateUI(data.session?.user, profile);
-        }
-      } catch (err) {
-        console.error('Bejelentkezési hiba:', err);
-        alert('Rendszerhiba történt a bejelentkezés során.');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerText = 'Bejelentkezés';
+  // Enter billentyű támogatása a jelszó mezőben
+  if (loginPassword) {
+    loginPassword.addEventListener('keypress', async (e) => {
+      if (e.key === 'Enter') {
+        await performLogin();
       }
     });
+  }
+
+  async function performLogin() {
+    const username = loginUsername.value.trim().toLowerCase();
+    const password = loginPassword.value.trim();
+
+    if (!username || !password) {
+      alert('Kérjük, adja meg a felhasználónevet és a jelszót!');
+      return;
+    }
+
+    btnLoginSubmit.disabled = true;
+    btnLoginSubmit.innerText = 'Bejelentkezés...';
+
+    try {
+      // Direct Query a Supabase profiles táblából
+      const { data: user, error } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, role')
+        .eq('username', username)
+        .eq('password', password)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Supabase hiba:', error);
+        alert('Adatbázis hiba: ' + error.message);
+      } else if (!user) {
+        alert('Hibás felhasználónév vagy jelszó!');
+      } else {
+        // Sikeres bejelentkezés -> Elmentjük a munkamenetet
+        sessionStorage.setItem('drugassist_user', JSON.stringify(user));
+        updateUI(user);
+      }
+    } catch (err) {
+      console.error('Rendszerhiba:', err);
+      alert('Nem sikerült kapcsolódni a Supabase-hez. Ellenőrizd a konzolt!');
+    } finally {
+      btnLoginSubmit.disabled = false;
+      btnLoginSubmit.innerText = 'Bejelentkezés';
+    }
   }
 
   // Kijelentkezés
   if (btnLogout) {
-    btnLogout.addEventListener('click', async () => {
-      await supabase.auth.signOut();
-      updateUI(null, null);
+    btnLogout.addEventListener('click', () => {
+      sessionStorage.removeItem('drugassist_user');
+      updateUI(null);
     });
   }
 
-  async function checkSession() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-      updateUI(session.user, profile);
+  function checkSession() {
+    const savedUser = sessionStorage.getItem('drugassist_user');
+    if (savedUser) {
+      updateUI(JSON.parse(savedUser));
     } else {
-      updateUI(null, null);
+      updateUI(null);
     }
   }
 
-  function updateUI(user, profile) {
-    if (user && profile) {
+  function updateUI(user) {
+    if (user) {
       if (loginContainer) loginContainer.classList.add('hidden');
       if (dashboardContainer) dashboardContainer.classList.remove('hidden');
       if (userDisplay) {
-        const roleName = profile.role === 'pharmacist' ? 'Gyógyszerész' : 'Asszisztens';
-        userDisplay.innerText = `${profile.full_name} (${roleName})`;
+        const roleName = user.role === 'pharmacist' ? 'Gyógyszerész' : 'Asszisztens';
+        userDisplay.innerText = `${user.full_name} (${roleName})`;
       }
     } else {
       if (loginContainer) loginContainer.classList.remove('hidden');
