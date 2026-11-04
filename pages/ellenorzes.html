@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DrugAssist Record - Gyógyszerészi Ellenőrzés</title>
+  <title>DrugAssist Record - Ellenőrzés</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
   <header class="app-header" style="background: #28a745;">
     <div class="logo">
       <a href="../index.html" class="back-link">← Főmenü</a>
-      <span class="badge" style="background: #1e7e34;">GYÓGYSZERÉSZ</span>
+      <span class="badge" style="background: #1e7e34;">VALIDÁCIÓ</span>
       <h1>Gyógyszerelési Tálcák Ellenőrzése</h1>
     </div>
     <div class="user-info">
@@ -21,29 +21,22 @@
   </header>
 
   <main class="container">
-    <!-- 1. Kártya: Tálca Keresése / QR Beolvasása -->
+    <!-- 1. Kártya: Tálca QR Beolvasása (Gyorsnyitás) -->
     <section class="card">
-      <h2>1. Tálca Kiválasztása vagy QR Beolvasása</h2>
+      <h2>1. Tálca QR Kód Beolvasása</h2>
       <div class="patient-grid">
         <div class="form-group">
-          <label for="verify-qr-input">Tálca QR Kód Beolvasása (Gyorskeresés)</label>
+          <label for="verify-qr-input">Tálca QR Kód Olvasása</label>
           <div class="input-with-button">
             <input type="text" id="verify-qr-input" placeholder="Olvassa be a tálca QR kódját..." autofocus>
-            <button type="button" id="btn-search-qr" class="btn btn-success">Keresés</button>
+            <button type="button" id="btn-search-qr" class="btn btn-success">Megnyitás</button>
           </div>
-        </div>
-
-        <div class="patient-details-box" id="active-patient-box">
-          <div><strong>Kiválasztott beteg:</strong> <span id="v-patient-name" class="highlight-text">Nincs kiválasztva</span></div>
-          <div><strong>Osztály / Ágy:</strong> <span id="v-ward-bed">-</span></div>
-          <div><strong>Rögzítés ideje:</strong> <span id="v-created-at">-</span></div>
-          <div><strong>Státusz:</strong> <span id="v-status-badge" class="badge" style="background:#ffc107; color:#333;">Várakozik</span></div>
         </div>
       </div>
     </section>
 
     <!-- 2. Kártya: Ellenőrzésre Váró Tálcák Listája -->
-    <section class="card" id="pending-list-section">
+    <section class="card">
       <div class="table-header">
         <h2>Ellenőrzésre Váró Tálcák (Piszkozatok)</h2>
         <button type="button" id="btn-refresh-list" class="btn btn-secondary btn-sm">Lista Frissítése</button>
@@ -67,46 +60,68 @@
         </table>
       </div>
     </section>
+  </main>
 
-    <!-- 3. Kártya: Kiválasztott Tálca Részletes Gyógyszerlistája & Morfológiája -->
-    <section class="card hidden" id="verify-details-section">
-      <div class="table-header">
-        <h2>2. Gyógyszerelési Mátrix & Morfológiai Ellenőrzés</h2>
+  <!-- Modal: Tálca Ellenőrzése & Jóváhagyása -->
+  <div id="verify-modal" class="modal">
+    <div class="modal-content" style="max-width: 900px; width: 95%;">
+      <div class="modal-header" style="background: #28a745; color: white; padding: 1rem; border-radius: 8px 8px 0 0;">
+        <h3 style="margin:0;">Tálca Ellenőrzése: <span id="v-patient-name">--</span></h3>
+        <span class="close-modal" id="btn-close-verify-modal" style="color:white; cursor:pointer; font-size: 1.8rem;">&times;</span>
       </div>
 
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Gyógyszernév</th>
-              <th>Morfológia (Vizsgálandó!)</th>
-              <th>LOT / Lejárat</th>
-              <th>Reggel</th>
-              <th>Délben</th>
-              <th>Este</th>
-              <th>Éjjel</th>
-            </tr>
-          </thead>
-          <tbody id="verify-items-body">
-            <!-- Dinamikusan töltődik -->
-          </tbody>
-        </table>
-      </div>
+      <div class="modal-body" style="padding: 1.5rem;">
+        <!-- Beteg Alapadatok -->
+        <div class="patient-details-box" style="margin-bottom: 1.5rem; background: #e9ecef; padding: 1rem; border-radius: 6px;">
+          <div><strong>Osztály / Ágy:</strong> <span id="v-ward-bed">-</span></div>
+          <div><strong>Rögzítés ideje:</strong> <span id="v-created-at">-</span></div>
+          <div><strong>Asszisztensi megjegyzés:</strong> <span id="v-notes-display" style="font-style: italic;">-</span></div>
+        </div>
 
-      <!-- Megjegyzés kijelzés és Jóváhagyás -->
-      <div class="summary-section">
-        <div class="form-group">
-          <label>Asszisztensi Megjegyzés:</label>
-          <div id="verify-notes-display" style="padding: 0.75rem; background: #e9ecef; border-radius: 4px; font-style: italic;">
-            Nincs megjegyzés.
+        <!-- Mátrix Táblázat -->
+        <h4 style="margin-bottom: 0.5rem;">Rögzített Gyógyszerek és Morfológia:</h4>
+        <div class="table-wrapper" style="margin-bottom: 1.5rem;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Gyógyszernév</th>
+                <th>Morfológia (Ellenőrizendő!)</th>
+                <th>LOT / Lejárat</th>
+                <th>Reggel</th>
+                <th>Délben</th>
+                <th>Este</th>
+                <th>Éjjel</th>
+              </tr>
+            </thead>
+            <tbody id="verify-items-body">
+              <!-- Dinamikusan töltődik -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- QR Kódos Igazolás a Jóváhagyáshoz -->
+        <div class="card" style="border: 2px solid #28a745; background: #f8fff9; padding: 1rem;">
+          <h4 style="color: #1e7e34; margin-bottom: 0.5rem;">Jóváhagyási Igazolás</h4>
+          <p style="font-size: 0.9rem; margin-bottom: 0.5rem;">
+            A jóváhagyáshoz olvassa be a tálcán lévő QR kódot! 
+            <br>
+            <strong style="color: #555;">(Várt QR kód segítségként: <span id="v-expected-qr" style="color: #0056b3;">--</span>)</strong>
+          </p>
+          
+          <div class="form-group">
+            <input type="text" id="verify-confirm-qr-input" placeholder="Olvassa be a tálca QR kódját a jóváhagyás feloldásához..." style="font-size: 1.1rem; border: 2px solid #28a745;">
           </div>
         </div>
-        <button type="button" id="btn-approve-dispensing" class="btn btn-large btn-success" style="font-size: 1.2rem; padding: 1rem;">
-          ✓ Tálca Ellenőrizve és Jóváhagyva (Lezárás)
+      </div>
+
+      <div class="modal-footer" style="padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+        <span id="role-warning-text" style="color: red; font-weight: bold;" class="hidden">Asszisztensként a jóváhagyás nem engedélyezett!</span>
+        <button type="button" id="btn-approve-dispensing" class="btn btn-success btn-large" disabled style="opacity: 0.5;">
+          ✓ Tálca Ellenőrizve és Jóváhagyva
         </button>
       </div>
-    </section>
-  </main>
+    </div>
+  </div>
 
   <!-- JavaScript modulok -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
