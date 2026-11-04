@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DrugAssist Record - Felhasználók</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .password-toggle {
+      cursor: pointer;
+      user-select: none;
+      margin-left: 0.5rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fejléc -->
+  <header class="app-header">
+    <div class="logo">
+      <h1>Felhasználók & Jogosultságok Kezelése</h1>
+    </div>
+    <div class="user-info" style="display: flex; align-items: center; gap: 1rem;">
+      <a href="../index.html" class="back-link" style="color: white; text-decoration: none; font-weight: bold; background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 4px;">🏠 Főmenü</a>
+      <span id="user-display">--</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Felhasználók Táblázat Kártya -->
+    <section class="card">
+      <div class="table-header">
+        <h2>Rendszerfelhasználók (<span id="total-users-count">0</span> fő)</h2>
+        <div>
+          <button type="button" id="btn-refresh-users" class="btn btn-secondary btn-sm" style="margin-right: 0.5rem;">Frissítés</button>
+          <button type="button" id="btn-open-add-user" class="btn btn-success" style="background: #10b981; border-color: #059669;">+ Új Felhasználó</button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Felhasználónév</th>
+              <th>Név</th>
+              <th>Jelszó</th>
+              <th>Szerepkör</th>
+              <th>Műveletek</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body">
+            <tr class="empty-row">
+              <td colspan="5">Betöltés folyamatban...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: Új / Szerkesztendő Felhasználó -->
+  <div id="user-modal" class="modal">
+    <div class="modal-content" style="max-width: 550px; width: 95%;">
+      <div class="modal-header">
+        <h3 id="user-modal-title" style="margin:0;">Új Felhasználó Felvétele</h3>
+        <span class="close-modal" id="btn-close-user-modal" style="cursor:pointer; font-size: 1.8rem;">&times;</span>
+      </div>
+
+      <form id="user-form">
+        <div class="modal-body" style="padding: 1.5rem;">
+          <input type="hidden" id="user-id">
+
+          <div class="form-group">
+            <label for="input-username">Felhasználónév</label>
+            <input type="text" id="input-username" placeholder="Pl.: asszisztens1" required autocomplete="off">
+          </div>
+
+          <div class="form-group">
+            <label for="input-fullname">Teljes Név</label>
+            <input type="text" id="input-fullname" placeholder="Pl.: Kovács Anna" required>
+          </div>
+
+          <div class="form-group">
+            <label for="input-password">Jelszó</label>
+            <input type="text" id="input-password" placeholder="Adjon meg egy jelszót..." required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="select-role">Szerepkör</label>
+            <select id="select-role" style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid #cbd5e1;">
+              <option value="assistant">Asszisztens</option>
+              <option value="pharmacist">Gyógyszerész</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="padding: 1rem 1.5rem; display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid #e2e8f0;">
+          <button type="button" id="btn-cancel-user" class="btn btn-secondary">Mégse</button>
+          <button type="submit" id="btn-save-user" class="btn btn-primary" style="background: #3b82f6; border-color: #2563eb;">Mentés Supabase-be</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JavaScript modulok -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/users.js"></script>
+</body>
+</html>
