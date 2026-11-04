@@ -70,25 +70,29 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    usersTableBody.innerHTML = list.map(u => `
-      <tr>
-        <td><code>${u.username}</code></td>
-        <td><strong>${u.full_name || '-'}</strong></td>
-        <td>
-          <span id="pwd-text-${u.id}">••••••••</span>
-          <span class="password-toggle" onclick="togglePasswordVisibility('${u.id}', '${u.password_hash || ''}')" title="Jelszó megjelenítése/elrejtése">👁️</span>
-        </td>
-        <td>
-          <span class="badge" style="background: ${u.role === 'pharmacist' ? '#8b5cf6' : '#3b82f6'}; color: white; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.82rem;">
-            ${u.role === 'pharmacist' ? 'Gyógyszerész' : 'Asszisztens'}
-          </span>
-        </td>
-        <td style="white-space: nowrap;">
-          <button type="button" onclick="editUser('${u.id}')" class="btn btn-primary btn-sm" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: #3b82f6;">Szerkesztés</button>
-          <button type="button" onclick="deleteUser('${u.id}')" class="btn btn-secondary btn-sm" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: #dc2626; color: white; border: none;">Törlés</button>
-        </td>
-      </tr>
-    `).join('');
+    usersTableBody.innerHTML = list.map(u => {
+      // Felismerjük mind a password_hash, mind a password mezőneveket
+      const pwdVal = u.password_hash || u.password || '';
+      return `
+        <tr>
+          <td><code>${u.username}</code></td>
+          <td><strong>${u.full_name || '-'}</strong></td>
+          <td>
+            <span id="pwd-text-${u.id}">••••••••</span>
+            <span class="password-toggle" onclick="togglePasswordVisibility('${u.id}', '${pwdVal}')" title="Jelszó megjelenítése/elrejtése" style="cursor:pointer; margin-left:0.5rem;">👁️</span>
+          </td>
+          <td>
+            <span class="badge" style="background: ${u.role === 'pharmacist' ? '#8b5cf6' : '#3b82f6'}; color: white; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.82rem;">
+              ${u.role === 'pharmacist' ? 'Gyógyszerész' : 'Asszisztens'}
+            </span>
+          </td>
+          <td style="white-space: nowrap;">
+            <button type="button" onclick="editUser('${u.id}')" class="btn btn-primary btn-sm" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: #3b82f6;">Szerkesztés</button>
+            <button type="button" onclick="deleteUser('${u.id}')" class="btn btn-secondary btn-sm" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: #dc2626; color: white; border: none;">Törlés</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 
   // Jelszó láthatóságának váltása
@@ -129,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     userIdInput.value = targetUser.id;
     usernameInput.value = targetUser.username || '';
     fullnameInput.value = targetUser.full_name || '';
-    passwordInput.value = targetUser.password_hash || '';
+    passwordInput.value = targetUser.password_hash || targetUser.password || '';
     roleSelect.value = targetUser.role || 'assistant';
 
     userModalTitle.innerText = 'Felhasználó Szerkesztése';
@@ -153,16 +157,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
+      const payload = {
+        username: username,
+        full_name: fullname,
+        password_hash: password,
+        role: role
+      };
+
       if (id) {
         // Frissítés
         const { error } = await db
           .from('profiles')
-          .update({
-            username: username,
-            full_name: fullname,
-            password_hash: password,
-            role: role
-          })
+          .update(payload)
           .eq('id', id);
 
         if (error) throw error;
@@ -171,12 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Új rekord beszúrása
         const { error } = await db
           .from('profiles')
-          .insert([{
-            username: username,
-            full_name: fullname,
-            password_hash: password,
-            role: role
-          }]);
+          .insert([payload]);
 
         if (error) throw error;
         alert('Új felhasználó sikeresen hozzáadva!');
