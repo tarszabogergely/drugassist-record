@@ -6,7 +6,6 @@
   <title>DrugAssist Record - Gyógyszerelés Rögzítés</title>
   <link rel="stylesheet" href="../css/style.css">
   <style>
-    /* Egyedi vizuális finomítások a modal-hoz és kártyákhoz */
     .lot-bubbles-container {
       display: flex;
       flex-wrap: wrap;
@@ -18,13 +17,14 @@
     .lot-bubble {
       background: #f1f5f9;
       border: 1px solid #cbd5e1;
-      padding: 0.4rem 0.8rem;
+      padding: 0.45rem 0.85rem;
       border-radius: 20px;
       cursor: pointer;
       font-size: 0.9rem;
       font-weight: 600;
       color: #334155;
       transition: all 0.2s ease;
+      user-select: none;
     }
 
     .lot-bubble:hover {
@@ -35,19 +35,9 @@
       background: #3b82f6;
       color: white;
       border-color: #2563eb;
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
     }
 
-    .lot-bubble-add {
-      background: #ecfdf5;
-      border: 1px dashed #10b981;
-      color: #047857;
-    }
-
-    .lot-bubble-add:hover {
-      background: #d1fae5;
-    }
-
-    /* Dose grid 4 oszlop egymás mellett */
     .dose-grid-horizontal {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -80,7 +70,6 @@
       box-sizing: border-box;
     }
 
-    /* Kiemelt gyógyszer kártya a modalban */
     .modal-med-header {
       background: #f0f9ff;
       border-left: 5px solid #0284c7;
@@ -169,16 +158,16 @@
       </div>
     </section>
 
-    <!-- 3. Kártya: Megjegyzés és Lezárás (Különválasztva lejjebb) -->
+    <!-- 3. Kártya: Megjegyzés és Lezárás (3. RÉS A MEGJEGYZÉS ÉS A GOMB KÖZÖTT) -->
     <section class="card" style="margin-top: 1.5rem; background: #f8fafc; border-top: 4px solid #3b82f6;">
       <h2 style="margin-top:0; color: #1e293b;">3. Asszisztensi Megjegyzés & Tálca Lezárása</h2>
       <div class="summary-section" style="padding-top: 0.5rem;">
-        <div class="form-group">
+        <div class="form-group" style="margin-bottom: 1.75rem;">
           <label for="dispensing-notes" style="font-weight: 600; color: #475569;">Asszisztensi Megjegyzés / Eltérés indoklása</label>
           <textarea id="dispensing-notes" rows="2" placeholder="Opcionális megjegyzés a tálcához (pl. szilárd adagolási forma felezve)..." style="background: white; border-radius: 8px;"></textarea>
         </div>
 
-        <button type="button" id="btn-save-dispensing" class="btn btn-large btn-primary" disabled style="width: 100%; padding: 1rem; font-size: 1.1rem; border-radius: 8px;">
+        <button type="button" id="btn-save-dispensing" class="btn btn-large btn-primary" disabled style="width: 100%; padding: 1rem; font-size: 1.1rem; border-radius: 8px; margin-top: 0.5rem;">
           ✓ Tálca Lezárása és Mentése Supabase-be
         </button>
       </div>
@@ -202,7 +191,6 @@
         <!-- Részletek a beolvasás után -->
         <div id="med-scanned-details" class="hidden">
           
-          <!-- 2/3. KIEMELT GYÓGYSZERNÉV ÉS MORFOLÓGIA -->
           <div class="modal-med-header">
             <h4 id="scanned-med-name">--</h4>
             <p style="margin:0; font-size: 0.95rem; color: #475569;">
@@ -210,38 +198,39 @@
             </p>
           </div>
 
-          <!-- PONTOSÍTOTT ELVÁLASZTÓ VONAL -->
           <hr class="dotted-divider">
 
-          <!-- 2/1. LOT BUBORÉKOK -->
+          <!-- 1. LOT BUBORÉKOK ÉS RÖGZÍTÉS -->
           <div class="form-group">
-            <label>Gyári szám (LOT) & Lejárat kiválasztása:</label>
+            <label style="font-weight: 600; color: #334155;">Válasszon korábbi gyári számot (LOT):</label>
             
-            <!-- Rejtett meglévő select a JS kompatibilitáshoz -->
+            <!-- Rejtett meglévő select a JS adatok átadásához -->
             <select id="lot-select" class="hidden">
               <option value="">-- Válassz korábbi LOT-ot --</option>
             </select>
 
             <!-- Dinamikus Buborék Konténer -->
             <div id="lot-bubbles-wrapper" class="lot-bubbles-container">
-              <!-- JS generálja a buborékokat -->
-            </div>
-
-            <button type="button" id="btn-toggle-new-lot" class="btn-link" style="font-size: 0.9rem; margin-top: 0.2rem;">+ Új LOT / Lejárat kézi megadása</button>
-          </div>
-
-          <div id="new-lot-inputs" class="hidden new-lot-box" style="background: #f1f5f9; padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem;">
-            <div class="form-group" style="margin-bottom: 0.5rem;">
-              <label for="new-lot-number">Új Gyári Szám (LOT)</label>
-              <input type="text" id="new-lot-number" placeholder="Pl.: AB123456">
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="new-expiry-date">Lejárati Dátum</label>
-              <input type="date" id="new-expiry-date">
+              <span style="color: #94a3b8; font-style: italic; font-size: 0.88rem;">Nincs rögzített korábbi LOT.</span>
             </div>
           </div>
 
-          <!-- 2/2. ADAGOLÁSI MÁTRIX (EGYMÁS MELLETT) -->
+          <!-- 2. ÚJ LOT RÖGZÍTÉS (ALAPÉRTELMEZETTEN KINYITVA) -->
+          <div id="new-lot-inputs" class="new-lot-box" style="background: #f1f5f9; padding: 1rem; border-radius: 8px; margin-bottom: 1.25rem; border: 1px solid #cbd5e1;">
+            <div style="font-weight: 700; color: #1e293b; margin-bottom: 0.6rem; font-size: 0.95rem;">Új Gyári Szám (LOT) Rögzítése:</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="new-lot-number" style="font-size: 0.85rem;">Gyári Szám (LOT)</label>
+                <input type="text" id="new-lot-number" placeholder="Pl.: AB123456" style="background: white;">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="new-expiry-date" style="font-size: 0.85rem;">Lejárati Dátum</label>
+                <input type="date" id="new-expiry-date" style="background: white;">
+              </div>
+            </div>
+          </div>
+
+          <!-- ADAGOLÁSI MÁTRIX (EGYMÁS MELLETT) -->
           <label style="font-weight: 600; color: #334155;">Adagolás (Egység / Napszak):</label>
           <div class="dose-grid-horizontal">
             <div class="dose-item-box">
