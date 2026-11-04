@@ -5,6 +5,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   let selectedDateStr = new Date().toISOString().split('T')[0]; // Mai nap (YYYY-MM-DD)
   let dayRecords = [];
+  let currentUser = null;
 
   // DOM elemek
   const datePicker = document.getElementById('archive-date-picker');
@@ -136,11 +137,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </tr>
                   `;
                 }).join('')}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      `).join('');
               </tbody>
             </table>
           </div>
