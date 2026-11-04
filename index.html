@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="css/style.css">
 
   <style>
-    /* 1. ÚJ BEJELENTKEZŐ FELÜLET STÍLUSAI */
+    /* 1. BEJELENTKEZŐ FELÜLET STÍLUSAI */
     body.login-body {
       margin: 0;
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -119,10 +119,10 @@
       text-align: center;
     }
 
-    /* 2. SZÉLESÍTETT DASHBOARD STÍLUSOK (3 GOMB EGYMÁS MELLETT) */
+    /* 2. SZÉLESÍTETT DASHBOARD STÍLUSOK */
     .dashboard-container-wide {
       max-width: 1200px;
-      margin: 2rem auto;
+      margin: 2.5rem auto;
       padding: 0 1.5rem;
     }
 
@@ -130,49 +130,56 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1.5rem;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
+    /* KÁRTYA GOMBOK STÍLUSA */
     .btn-action-card {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 2.5rem 1.5rem;
+      padding: 2.2rem 1.5rem;
       background: white;
       border-radius: 16px;
       text-decoration: none;
       color: #2c3e50;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-      transition: all 0.25s ease;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       border: 1px solid #e2e8f0;
       text-align: center;
     }
 
     .btn-action-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+      transform: translateY(-6px);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.1);
     }
 
     .btn-action-card .icon {
-      font-size: 3.2rem;
-      margin-bottom: 1rem;
+      font-size: 3rem;
+      margin-bottom: 0.8rem;
     }
 
     .btn-action-card .title {
-      font-size: 1.4rem;
+      font-size: 1.35rem;
       font-weight: 700;
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.3rem;
     }
 
     .btn-action-card .sub {
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       color: #64748b;
     }
 
+    /* Felső 3 gomb színszegélyei */
     .card-gyogyszereles { border-top: 6px solid #3b82f6; }
     .card-ellenorzes { border-top: 6px solid #10b981; }
     .card-archivum { border-top: 6px solid #8b5cf6; }
+
+    /* Alsó 3 gomb színszegélyei */
+    .card-torzs { border-top: 6px solid #f59e0b; }
+    .card-betegek { border-top: 6px solid #ec4899; }
+    .card-felhasznalas { border-top: 6px solid #06b6d4; }
 
     .hidden {
       display: none !important;
@@ -229,7 +236,7 @@
     </header>
 
     <main class="dashboard-container-wide">
-      <!-- 3 NAGY GOMB EGYMÁS MELLETT -->
+      <!-- FELSŐ 3 NAGY GOMB -->
       <section class="actions-grid-3">
         <a href="pages/gyogyszereles.html" class="btn-action-card card-gyogyszereles">
           <span class="icon">💊</span>
@@ -250,30 +257,30 @@
         </a>
       </section>
 
-      <hr class="divider">
+      <!-- ALSÓ 3 MODUL GOMB -->
+      <section class="actions-grid-3">
+        <a href="pages/torzs.html" class="btn-action-card card-torzs">
+          <span class="icon">📦</span>
+          <span class="title">Gyógyszertörzs</span>
+          <span class="sub">Morfológia & vonalkódok</span>
+        </a>
 
-      <!-- További Modulok (Eredeti Másodlagos Funkciók Stílusával) -->
-      <section class="card">
-        <h2 style="margin-top:0; margin-bottom: 1.2rem; color: #334155;">További Modulok</h2>
-        <div class="secondary-actions">
-          <a href="pages/torzs.html" class="btn-action btn-sub">
-            <span class="icon">📦</span>
-            <span>Gyógyszertörzs</span>
-          </a>
-          <a href="pages/betegek.html" class="btn-action btn-sub">
-            <span class="icon">👤</span>
-            <span>Betegek</span>
-          </a>
-          <a href="pages/felhasznalas.html" class="btn-action btn-sub">
-            <span class="icon">📊</span>
-            <span>Felhasználás</span>
-          </a>
-        </div>
+        <a href="pages/betegek.html" class="btn-action-card card-betegek">
+          <span class="icon">👤</span>
+          <span class="title">Betegek</span>
+          <span class="sub">Nyilvántartás & előzmények</span>
+        </a>
+
+        <a href="pages/felhasznalas.html" class="btn-action-card card-felhasznalas">
+          <span class="icon">📊</span>
+          <span class="title">Felhasználás</span>
+          <span class="sub">Statisztikák & kimutatások</span>
+        </a>
       </section>
     </main>
   </div>
 
-  <!-- Javascript betöltése (Szigorú sorrendben!) -->
+  <!-- Javascript betöltése -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/auth.js"></script>
