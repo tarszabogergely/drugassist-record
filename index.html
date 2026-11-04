@@ -121,16 +121,16 @@
 
     /* 2. SZÉLESÍTETT DASHBOARD STÍLUSOK */
     .dashboard-container-wide {
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 2.5rem auto;
       padding: 0 1.5rem;
     }
 
-    /* FELSŐ FŐ MŰVELETEK (NAGY KÁRTYÁK) */
-    .actions-grid-3 {
+    /* FELSŐ FŐ MŰVELETEK (4 NAGY KÁRTYA) */
+    .actions-grid-4 {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
     }
 
     .btn-action-card {
@@ -138,7 +138,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 2.5rem 1.5rem;
+      padding: 2.2rem 1.2rem;
       background: white;
       border-radius: 16px;
       text-decoration: none;
@@ -155,36 +155,37 @@
     }
 
     .btn-action-card .icon {
-      font-size: 3.2rem;
+      font-size: 3rem;
       margin-bottom: 0.8rem;
     }
 
     .btn-action-card .title {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       font-weight: 700;
       margin-bottom: 0.3rem;
     }
 
     .btn-action-card .sub {
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       color: #64748b;
     }
 
+    .card-cimke { border-top: 6px solid #0284c7; }
     .card-gyogyszereles { border-top: 6px solid #3b82f6; }
     .card-ellenorzes { border-top: 6px solid #10b981; }
     .card-archivum { border-top: 6px solid #8b5cf6; }
 
-    /* ALSÓ MÁSODLAGOS BLOKK (KISEBB KÁRTYÁK, LEJJER ELHELYEZVE) */
+    /* ALSÓ MÁSODLAGOS BLOKK (5 KISEBB KÁRTYA) */
     .secondary-section {
       margin-top: 3.5rem;
       padding-top: 2rem;
       border-top: 1px dashed #cbd5e1;
     }
 
-    .secondary-grid-3 {
+    .secondary-grid-5 {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.25rem;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1rem;
     }
 
     .btn-sub-card {
@@ -192,7 +193,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 1.4rem 1rem;
+      padding: 1.3rem 0.8rem;
       background: #f8fafc;
       border-radius: 12px;
       text-decoration: none;
@@ -210,24 +211,26 @@
     }
 
     .btn-sub-card .icon {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
+      font-size: 1.8rem;
+      margin-bottom: 0.4rem;
     }
 
     .btn-sub-card .title {
-      font-size: 1.05rem;
+      font-size: 0.98rem;
       font-weight: 600;
       margin-bottom: 0.2rem;
     }
 
     .btn-sub-card .sub {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: #64748b;
     }
 
     .card-torzs { border-top: 4px solid #f59e0b; }
+    .card-batch { border-top: 4px solid #10b981; }
     .card-betegek { border-top: 4px solid #ec4899; }
     .card-felhasznalas { border-top: 4px solid #06b6d4; }
+    .card-users { border-top: 4px solid #6366f1; }
 
     .hidden {
       display: none !important;
@@ -284,8 +287,15 @@
     </header>
 
     <main class="dashboard-container-wide">
-      <!-- FELSŐ 3 FŐ GOMB (NAGY MÉRET) -->
-      <section class="actions-grid-3">
+      <!-- FELSŐ FŐ GOMBOK (4 NAGY KÁRTYA) -->
+      <section class="actions-grid-4">
+        <!-- ÚJ GOMB: CÍMKENYOMTATÁS A GYÓGYSZERELÉS ELŐTT -->
+        <a href="cimke.html" class="btn-action-card card-cimke">
+          <span class="icon">🖨️</span>
+          <span class="title">Címkenyomtatás</span>
+          <span class="sub">10x7.5 cm QR kódos Zebra címkék</span>
+        </a>
+
         <a href="pages/gyogyszereles.html" class="btn-action-card card-gyogyszereles">
           <span class="icon">💊</span>
           <span class="title">Gyógyszerelés</span>
@@ -305,13 +315,20 @@
         </a>
       </section>
 
-      <!-- ALSÓ MÁSODLAGOS BLOKK (KÜLÖNVÁLASZTVA, KISEBB KÁRTYÁKKAL) -->
+      <!-- ALSÓ MÁSODLAGOS BLOKK (5 KISEBB KÁRTYA) -->
       <section class="secondary-section">
-        <div class="secondary-grid-3">
+        <div class="secondary-grid-5">
           <a href="pages/torzs.html" class="btn-sub-card card-torzs">
             <span class="icon">📦</span>
             <span class="title">Gyógyszertörzs</span>
             <span class="sub">Morfológia & vonalkódok</span>
+          </a>
+
+          <!-- ÚJ GOMB: GYÁRI SZÁMOK -->
+          <a href="pages/batch.html" class="btn-sub-card card-batch">
+            <span class="icon">🏷️</span>
+            <span class="title">Gyári számok</span>
+            <span class="sub">LOT & lejárati dátumok</span>
           </a>
 
           <a href="pages/betegek.html" class="btn-sub-card card-betegek">
@@ -320,10 +337,18 @@
             <span class="sub">Nyilvántartás & előzmények</span>
           </a>
 
+          <!-- ÁTNEVEZVE: KIMUTATÁSOK -->
           <a href="pages/felhasznalas.html" class="btn-sub-card card-felhasznalas">
             <span class="icon">📊</span>
-            <span class="title">Felhasználás</span>
-            <span class="sub">Statisztikák & kimutatások</span>
+            <span class="title">Kimutatások</span>
+            <span class="sub">Statisztikák & felhasználás</span>
+          </a>
+
+          <!-- ÚJ GOMB: FELHASZNÁLÓK -->
+          <a href="pages/users.html" class="btn-sub-card card-users">
+            <span class="icon">👥</span>
+            <span class="title">Felhasználók</span>
+            <span class="sub">Jogosultságok & profilok</span>
           </a>
         </div>
       </section>
