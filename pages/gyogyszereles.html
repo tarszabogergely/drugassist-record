@@ -5,6 +5,102 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DrugAssist Record - Gyógyszerelés Rögzítés</title>
   <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* Egyedi vizuális finomítások a modal-hoz és kártyákhoz */
+    .lot-bubbles-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .lot-bubble {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #334155;
+      transition: all 0.2s ease;
+    }
+
+    .lot-bubble:hover {
+      background: #e2e8f0;
+    }
+
+    .lot-bubble.selected {
+      background: #3b82f6;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    .lot-bubble-add {
+      background: #ecfdf5;
+      border: 1px dashed #10b981;
+      color: #047857;
+    }
+
+    .lot-bubble-add:hover {
+      background: #d1fae5;
+    }
+
+    /* Dose grid 4 oszlop egymás mellett */
+    .dose-grid-horizontal {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .dose-item-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.5rem;
+      text-align: center;
+    }
+
+    .dose-item-box span {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 0.3rem;
+    }
+
+    .dose-item-box input {
+      width: 100%;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: bold;
+      padding: 0.4rem;
+      box-sizing: border-box;
+    }
+
+    /* Kiemelt gyógyszer kártya a modalban */
+    .modal-med-header {
+      background: #f0f9ff;
+      border-left: 5px solid #0284c7;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+
+    .modal-med-header h4 {
+      margin: 0 0 0.4rem 0;
+      font-size: 1.3rem;
+      color: #0369a1;
+    }
+
+    .dotted-divider {
+      border: none;
+      border-top: 2px dotted #cbd5e1;
+      margin: 1.25rem 0;
+    }
+  </style>
 </head>
 <body>
 
@@ -71,16 +167,19 @@
           </tbody>
         </table>
       </div>
+    </section>
 
-      <!-- Megjegyzés és Lezárás -->
-      <div class="summary-section">
+    <!-- 3. Kártya: Megjegyzés és Lezárás (Különválasztva lejjebb) -->
+    <section class="card" style="margin-top: 1.5rem; background: #f8fafc; border-top: 4px solid #3b82f6;">
+      <h2 style="margin-top:0; color: #1e293b;">3. Asszisztensi Megjegyzés & Tálca Lezárása</h2>
+      <div class="summary-section" style="padding-top: 0.5rem;">
         <div class="form-group">
-          <label for="dispensing-notes">Asszisztensi Megjegyzés / Eltérés indoklása</label>
-          <textarea id="dispensing-notes" rows="2" placeholder="Opcionális megjegyzés a tálcához (pl. szilárd adagolási forma felezve)..."></textarea>
+          <label for="dispensing-notes" style="font-weight: 600; color: #475569;">Asszisztensi Megjegyzés / Eltérés indoklása</label>
+          <textarea id="dispensing-notes" rows="2" placeholder="Opcionális megjegyzés a tálcához (pl. szilárd adagolási forma felezve)..." style="background: white; border-radius: 8px;"></textarea>
         </div>
 
-        <button type="button" id="btn-save-dispensing" class="btn btn-large btn-primary" disabled>
-          Tálca Lezárása és Mentése Supabase-be
+        <button type="button" id="btn-save-dispensing" class="btn btn-large btn-primary" disabled style="width: 100%; padding: 1rem; font-size: 1.1rem; border-radius: 8px;">
+          ✓ Tálca Lezárása és Mentése Supabase-be
         </button>
       </div>
     </section>
@@ -88,13 +187,13 @@
 
   <!-- Modal: Gyógyszer Beolvasása & Adagolás -->
   <div id="scan-modal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 680px; width: 95%;">
       <div class="modal-header">
-        <h3>Gyógyszer Beolvasása (Vonalkód / EAN)</h3>
-        <span class="close-modal" id="btn-close-modal">&times;</span>
+        <h3 style="margin:0;">Gyógyszer Beolvasása (Vonalkód / EAN)</h3>
+        <span class="close-modal" id="btn-close-modal" style="cursor:pointer; font-size: 1.8rem;">&times;</span>
       </div>
 
-      <div class="modal-body">
+      <div class="modal-body" style="padding: 1.5rem;">
         <div class="form-group">
           <label for="barcode-input">Gyógyszer Vonalkódja</label>
           <input type="text" id="barcode-input" placeholder="Olvassa be a gyógyszer vonalkódját...">
@@ -102,47 +201,62 @@
 
         <!-- Részletek a beolvasás után -->
         <div id="med-scanned-details" class="hidden">
-          <div class="med-info-card">
+          
+          <!-- 2/3. KIEMELT GYÓGYSZERNÉV ÉS MORFOLÓGIA -->
+          <div class="modal-med-header">
             <h4 id="scanned-med-name">--</h4>
-            <p><strong>Morfológiai leírás:</strong> <span id="scanned-med-morphology">--</span></p>
+            <p style="margin:0; font-size: 0.95rem; color: #475569;">
+              <strong>Morfológia:</strong> <span id="scanned-med-morphology">--</span>
+            </p>
           </div>
 
-          <!-- LOT választó és új rögzítése -->
+          <!-- PONTOSÍTOTT ELVÁLASZTÓ VONAL -->
+          <hr class="dotted-divider">
+
+          <!-- 2/1. LOT BUBORÉKOK -->
           <div class="form-group">
-            <label for="lot-select">Gyári szám (LOT) & Lejárat kiválasztása</label>
-            <select id="lot-select">
+            <label>Gyári szám (LOT) & Lejárat kiválasztása:</label>
+            
+            <!-- Rejtett meglévő select a JS kompatibilitáshoz -->
+            <select id="lot-select" class="hidden">
               <option value="">-- Válassz korábbi LOT-ot --</option>
             </select>
-            <button type="button" id="btn-toggle-new-lot" class="btn-link">+ Új LOT / Lejárat megadása</button>
+
+            <!-- Dinamikus Buborék Konténer -->
+            <div id="lot-bubbles-wrapper" class="lot-bubbles-container">
+              <!-- JS generálja a buborékokat -->
+            </div>
+
+            <button type="button" id="btn-toggle-new-lot" class="btn-link" style="font-size: 0.9rem; margin-top: 0.2rem;">+ Új LOT / Lejárat kézi megadása</button>
           </div>
 
-          <div id="new-lot-inputs" class="hidden new-lot-box">
-            <div class="form-group">
+          <div id="new-lot-inputs" class="hidden new-lot-box" style="background: #f1f5f9; padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem;">
+            <div class="form-group" style="margin-bottom: 0.5rem;">
               <label for="new-lot-number">Új Gyári Szám (LOT)</label>
               <input type="text" id="new-lot-number" placeholder="Pl.: AB123456">
             </div>
-            <div class="form-group">
+            <div class="form-group" style="margin-bottom: 0;">
               <label for="new-expiry-date">Lejárati Dátum</label>
               <input type="date" id="new-expiry-date">
             </div>
           </div>
 
-          <!-- Adagolási Mátrix (Napszakok) -->
-          <label>Adagolás (Egység / Napszak)</label>
-          <div class="dose-grid">
-            <div class="dose-item">
+          <!-- 2/2. ADAGOLÁSI MÁTRIX (EGYMÁS MELLETT) -->
+          <label style="font-weight: 600; color: #334155;">Adagolás (Egység / Napszak):</label>
+          <div class="dose-grid-horizontal">
+            <div class="dose-item-box">
               <span>Reggel</span>
               <input type="number" id="dose-morning" value="0" step="0.5" min="0">
             </div>
-            <div class="dose-item">
+            <div class="dose-item-box">
               <span>Délben</span>
               <input type="number" id="dose-noon" value="0" step="0.5" min="0">
             </div>
-            <div class="dose-item">
+            <div class="dose-item-box">
               <span>Este</span>
               <input type="number" id="dose-evening" value="0" step="0.5" min="0">
             </div>
-            <div class="dose-item">
+            <div class="dose-item-box">
               <span>Éjjel</span>
               <input type="number" id="dose-night" value="0" step="0.5" min="0">
             </div>
@@ -150,8 +264,10 @@
         </div>
       </div>
 
-      <div class="modal-footer">
-        <button type="button" id="btn-add-item" class="btn btn-primary hidden">Hozzáadás a tálcához</button>
+      <div class="modal-footer" style="padding: 1rem 1.5rem; display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid #e2e8f0;">
+        <button type="button" id="btn-add-item" class="btn btn-primary hidden" style="background: #10b981; border-color: #059669; padding: 0.7rem 1.5rem; font-size: 1rem; border-radius: 6px;">
+          + Hozzáadás a tálcához <span style="background: rgba(255,255,255,0.25); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.85rem; margin-left: 0.4rem;">F3</span>
+        </button>
       </div>
     </div>
   </div>
