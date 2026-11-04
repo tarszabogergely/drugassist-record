@@ -6,7 +6,7 @@
   <title>DrugAssist Record - Gyógyszerelés Rögzítés</title>
   <link rel="stylesheet" href="../css/style.css">
   <style>
-    /* Beteg azonosítás elrendezése: Bal oldalon adatok, jobb oldalon QR olvasó */
+    /* Beteg azonosítás elrendezése: Bal oldalon egymás alatt a függőleges adatok, jobb oldalon QR olvasó */
     .patient-identification-grid {
       display: grid;
       grid-template-columns: 1.2fr 1fr;
@@ -19,25 +19,27 @@
       border: 1px solid #cbd5e1;
       border-radius: 10px;
       padding: 1.25rem;
+      color: #000000;
+      font-family: inherit;
     }
 
-    .patient-large-info .p-name-title {
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: #0284c7;
-      margin-bottom: 0.5rem;
-    }
-
-    .patient-large-info .p-details-row {
+    .patient-info-list {
       display: flex;
-      gap: 1.5rem;
-      font-size: 1.05rem;
-      color: #334155;
-      margin-top: 0.4rem;
+      flex-direction: column;
+      gap: 0.4rem;
+      color: #000000;
+      font-size: 1rem;
     }
 
-    .patient-large-info .p-details-row strong {
-      color: #1e293b;
+    .patient-info-list .p-row-name {
+      font-size: 1.35rem;
+      font-weight: bold;
+      color: #000000;
+      margin-bottom: 0.2rem;
+    }
+
+    .patient-info-list div {
+      color: #000000;
     }
 
     /* LOT buborékok stílusa */
@@ -141,26 +143,23 @@
   </header>
 
   <main class="container">
-    <!-- 1. Kártya: Beteg Azonosítás (Balra adatok nagyobb méretben, Jobbra QR olvasó) -->
+    <!-- 1. Kártya: Beteg Azonosítás (Egymás alatti adatokkal) -->
     <section class="card">
       <h2>Beteg azonosítás</h2>
       <div class="patient-identification-grid">
         
-        <!-- BAL OLDAL: Nagyobb méretű beteg adatok -->
+        <!-- BAL OLDAL: Egymás alatti adatok fekete színnel -->
         <div class="patient-large-info" id="patient-details-box">
-          <div class="p-name-title">
-            <span>Beteg Neve: </span><span id="p-name">Nincs rögzítve</span>
-          </div>
-          <div class="p-details-row">
-            <div><strong>TAJ:</strong> <span id="p-taj">-</span></div>
-            <div><strong>Osztály / Ágy:</strong> <span id="p-ward-bed">-</span></div>
-          </div>
-          <div style="font-size: 0.88rem; color: #64748b; margin-top: 0.5rem;">
-            Rögzítés ideje: <span id="p-time">-</span>
+          <div class="patient-info-list">
+            <div class="p-row-name">Név: <span id="p-name">-</span></div>
+            <div>TAJ: <span id="p-taj">-</span></div>
+            <div>Osztály: <span id="p-ward">-</span></div>
+            <div>Ágyszám: <span id="p-bed">-</span></div>
+            <div>Rögzítés ideje: <span id="p-time">-</span></div>
           </div>
         </div>
 
-        <!-- JOBB OLDAL: QR olvasó sáv kurzorral -->
+        <!-- JOBB OLDAL: QR olvasó sáv -->
         <div class="form-group" style="margin-bottom: 0;">
           <label for="qr-input" style="font-weight: 600; color: #1e293b;">Beteg QR Kód Olvasása</label>
           <div class="input-with-button">
@@ -204,7 +203,7 @@
       </div>
     </section>
 
-    <!-- 3. Kártya: Megjegyzés és Lezárás (Fehér alappal, mint a Gyógyszerek rész) -->
+    <!-- 3. Kártya: Megjegyzés és Lezárás -->
     <section class="card">
       <h2>Megjegyzés & Lezárás</h2>
       <div class="summary-section" style="padding-top: 0.25rem;">
