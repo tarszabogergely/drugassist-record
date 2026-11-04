@@ -43,8 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btnLoginSubmit.innerText = 'Bejelentkezés...';
 
     try {
-      // Direct Query a Supabase profiles táblából
-      const { data: user, error } = await supabase
+      // Direct Query a Supabase profiles táblából (db használata supabase helyett!)
+      const { data: user, error } = await db
         .from('profiles')
         .select('id, username, full_name, role')
         .eq('username', username)
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.error('Rendszerhiba:', err);
-      alert('Nem sikerült kapcsolódni a Supabase-hez. Ellenőrizd a konzolt!');
+      alert('Nem sikerült kapcsolódni a Supabase-hez: ' + err.message);
     } finally {
       btnLoginSubmit.disabled = false;
       btnLoginSubmit.innerText = 'Bejelentkezés';
