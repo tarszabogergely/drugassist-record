@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DrugAssist Record - Gyógyszerészi Ellenőrzés</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- Fejléc -->
+  <header class="app-header" style="background: #28a745;">
+    <div class="logo">
+      <a href="../index.html" class="back-link">← Főmenü</a>
+      <span class="badge" style="background: #1e7e34;">GYÓGYSZERÉSZ</span>
+      <h1>Gyógyszerelési Tálcák Ellenőrzése</h1>
+    </div>
+    <div class="user-info">
+      <span id="user-display">--</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 1. Kártya: Tálca Keresése / QR Beolvasása -->
+    <section class="card">
+      <h2>1. Tálca Kiválasztása vagy QR Beolvasása</h2>
+      <div class="patient-grid">
+        <div class="form-group">
+          <label for="verify-qr-input">Tálca QR Kód Beolvasása (Gyorskeresés)</label>
+          <div class="input-with-button">
+            <input type="text" id="verify-qr-input" placeholder="Olvassa be a tálca QR kódját..." autofocus>
+            <button type="button" id="btn-search-qr" class="btn btn-success">Keresés</button>
+          </div>
+        </div>
+
+        <div class="patient-details-box" id="active-patient-box">
+          <div><strong>Kiválasztott beteg:</strong> <span id="v-patient-name" class="highlight-text">Nincs kiválasztva</span></div>
+          <div><strong>Osztály / Ágy:</strong> <span id="v-ward-bed">-</span></div>
+          <div><strong>Rögzítés ideje:</strong> <span id="v-created-at">-</span></div>
+          <div><strong>Státusz:</strong> <span id="v-status-badge" class="badge" style="background:#ffc107; color:#333;">Várakozik</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Kártya: Ellenőrzésre Váró Tálcák Listája -->
+    <section class="card" id="pending-list-section">
+      <div class="table-header">
+        <h2>Ellenőrzésre Váró Tálcák (Piszkozatok)</h2>
+        <button type="button" id="btn-refresh-list" class="btn btn-secondary btn-sm">Lista Frissítése</button>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Beteg Neve</th>
+              <th>Osztály / Ágy</th>
+              <th>TAJ szám</th>
+              <th>Rögzítés Időpontja</th>
+              <th>Művelet</th>
+            </tr>
+          </thead>
+          <tbody id="pending-trays-body">
+            <tr class="empty-row">
+              <td colspan="5">Betöltés folyamatban...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 3. Kártya: Kiválasztott Tálca Részletes Gyógyszerlistája & Morfológiája -->
+    <section class="card hidden" id="verify-details-section">
+      <div class="table-header">
+        <h2>2. Gyógyszerelési Mátrix & Morfológiai Ellenőrzés</h2>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Gyógyszernév</th>
+              <th>Morfológia (Vizsgálandó!)</th>
+              <th>LOT / Lejárat</th>
+              <th>Reggel</th>
+              <th>Délben</th>
+              <th>Este</th>
+              <th>Éjjel</th>
+            </tr>
+          </thead>
+          <tbody id="verify-items-body">
+            <!-- Dinamikusan töltődik -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Megjegyzés kijelzés és Jóváhagyás -->
+      <div class="summary-section">
+        <div class="form-group">
+          <label>Asszisztensi Megjegyzés:</label>
+          <div id="verify-notes-display" style="padding: 0.75rem; background: #e9ecef; border-radius: 4px; font-style: italic;">
+            Nincs megjegyzés.
+          </div>
+        </div>
+        <button type="button" id="btn-approve-dispensing" class="btn btn-large btn-success" style="font-size: 1.2rem; padding: 1rem;">
+          ✓ Tálca Ellenőrizve és Jóváhagyva (Lezárás)
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- JavaScript modulok -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/ellenorzes.js"></script>
+</body>
+</html>
