@@ -6,6 +6,41 @@
   <title>DrugAssist Record - Gyógyszerelés Rögzítés</title>
   <link rel="stylesheet" href="../css/style.css">
   <style>
+    /* Beteg azonosítás elrendezése: Bal oldalon adatok, jobb oldalon QR olvasó */
+    .patient-identification-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .patient-large-info {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+
+    .patient-large-info .p-name-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #0284c7;
+      margin-bottom: 0.5rem;
+    }
+
+    .patient-large-info .p-details-row {
+      display: flex;
+      gap: 1.5rem;
+      font-size: 1.05rem;
+      color: #334155;
+      margin-top: 0.4rem;
+    }
+
+    .patient-large-info .p-details-row strong {
+      color: #1e293b;
+    }
+
+    /* LOT buborékok stílusa */
     .lot-bubbles-container {
       display: flex;
       flex-wrap: wrap;
@@ -38,6 +73,7 @@
       box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
     }
 
+    /* Adagolás 4 oszlop egymás mellett */
     .dose-grid-horizontal {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -105,24 +141,34 @@
   </header>
 
   <main class="container">
-    <!-- 1. Kártya: Beteg QR Beolvasása -->
+    <!-- 1. Kártya: Beteg Azonosítás (Balra adatok nagyobb méretben, Jobbra QR olvasó) -->
     <section class="card">
       <h2>Beteg azonosítás</h2>
-      <div class="patient-grid">
-        <div class="form-group">
-          <label for="qr-input">Beteg QR Kód (Név??Osztály??Ágyszám??Idő)</label>
-          <div class="input-with-button">
-            <input type="text" id="qr-input" placeholder="Olvassa be a beteg QR kódját..." autofocus>
-            <button type="button" id="btn-parse-qr" class="btn btn-primary">Betöltés</button>
+      <div class="patient-identification-grid">
+        
+        <!-- BAL OLDAL: Nagyobb méretű beteg adatok -->
+        <div class="patient-large-info" id="patient-details-box">
+          <div class="p-name-title">
+            <span>Beteg Neve: </span><span id="p-name">Nincs rögzítve</span>
+          </div>
+          <div class="p-details-row">
+            <div><strong>TAJ:</strong> <span id="p-taj">-</span></div>
+            <div><strong>Osztály / Ágy:</strong> <span id="p-ward-bed">-</span></div>
+          </div>
+          <div style="font-size: 0.88rem; color: #64748b; margin-top: 0.5rem;">
+            Rögzítés ideje: <span id="p-time">-</span>
           </div>
         </div>
 
-        <div class="patient-details-box" id="patient-details-box">
-          <div><strong>Beteg Neve:</strong> <span id="p-name" class="highlight-text">Nincs rögzítve</span></div>
-          <div><strong>TAJ szám:</strong> <span id="p-taj">-</span></div>
-          <div><strong>Osztály / Ágy:</strong> <span id="p-ward-bed">-</span></div>
-          <div><strong>Rögzítés Időpontja:</strong> <span id="p-time">-</span></div>
+        <!-- JOBB OLDAL: QR olvasó sáv kurzorral -->
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="qr-input" style="font-weight: 600; color: #1e293b;">Beteg QR Kód Olvasása</label>
+          <div class="input-with-button">
+            <input type="text" id="qr-input" placeholder="Olvassa be a beteg QR kódját..." autofocus style="font-size: 1.05rem; padding: 0.75rem;">
+            <button type="button" id="btn-parse-qr" class="btn btn-primary" style="padding: 0.75rem 1.25rem;">Betöltés</button>
+          </div>
         </div>
+
       </div>
     </section>
 
@@ -158,13 +204,13 @@
       </div>
     </section>
 
-    <!-- 3. Kártya: Megjegyzés és Lezárás (3. RÉS A MEGJEGYZÉS ÉS A GOMB KÖZÖTT) -->
-    <section class="card" style="margin-top: 1.5rem; background: #f8fafc; border-top: 4px solid #3b82f6;">
-      <h2 style="margin-top:0; color: #1e293b;">Megjegyzés</h2>
-      <div class="summary-section" style="padding-top: 0.5rem;">
+    <!-- 3. Kártya: Megjegyzés és Lezárás (Fehér alappal, mint a Gyógyszerek rész) -->
+    <section class="card">
+      <h2>Megjegyzés & Lezárás</h2>
+      <div class="summary-section" style="padding-top: 0.25rem;">
         <div class="form-group" style="margin-bottom: 1.75rem;">
           <label for="dispensing-notes" style="font-weight: 600; color: #475569;">Asszisztensi Megjegyzés / Eltérés indoklása</label>
-          <textarea id="dispensing-notes" rows="2" placeholder="Opcionális megjegyzés a tálcához (pl. szilárd adagolási forma felezve)..." style="background: white; border-radius: 8px;"></textarea>
+          <textarea id="dispensing-notes" rows="2" placeholder="Opcionális megjegyzés a tálcához (pl. szilárd adagolási forma felezve)..." style="background: white; border-radius: 8px; border: 1px solid #cbd5e1;"></textarea>
         </div>
 
         <button type="button" id="btn-save-dispensing" class="btn btn-large btn-primary" disabled style="width: 100%; padding: 1rem; font-size: 1.1rem; border-radius: 8px; margin-top: 0.5rem;">
@@ -204,18 +250,16 @@
           <div class="form-group">
             <label style="font-weight: 600; color: #334155;">Válasszon korábbi gyári számot (LOT):</label>
             
-            <!-- Rejtett meglévő select a JS adatok átadásához -->
             <select id="lot-select" class="hidden">
               <option value="">-- Válassz korábbi LOT-ot --</option>
             </select>
 
-            <!-- Dinamikus Buborék Konténer -->
             <div id="lot-bubbles-wrapper" class="lot-bubbles-container">
               <span style="color: #94a3b8; font-style: italic; font-size: 0.88rem;">Nincs rögzített korábbi LOT.</span>
             </div>
           </div>
 
-          <!-- 2. ÚJ LOT RÖGZÍTÉS (ALAPÉRTELMEZETTEN KINYITVA) -->
+          <!-- 2. ÚJ LOT RÖGZÍTÉS -->
           <div id="new-lot-inputs" class="new-lot-box" style="background: #f1f5f9; padding: 1rem; border-radius: 8px; margin-bottom: 1.25rem; border: 1px solid #cbd5e1;">
             <div style="font-weight: 700; color: #1e293b; margin-bottom: 0.6rem; font-size: 0.95rem;">Új Gyári Szám (LOT) Rögzítése:</div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
