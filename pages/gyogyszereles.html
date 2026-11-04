@@ -6,7 +6,7 @@
   <title>DrugAssist Record - Gyógyszerelés Rögzítés</title>
   <link rel="stylesheet" href="../css/style.css">
   <style>
-    /* Beteg azonosítás elrendezése: Bal oldalon egymás alatt a függőleges adatok, jobb oldalon QR olvasó */
+    /* Beteg azonosítás elrendezése */
     .patient-identification-grid {
       display: grid;
       grid-template-columns: 1.2fr 1fr;
@@ -143,12 +143,11 @@
   </header>
 
   <main class="container">
-    <!-- 1. Kártya: Beteg Azonosítás (Egymás alatti adatokkal) -->
+    <!-- 1. Kártya: Beteg Azonosítás -->
     <section class="card">
       <h2>Beteg azonosítás</h2>
       <div class="patient-identification-grid">
         
-        <!-- BAL OLDAL: Egymás alatti adatok fekete színnel -->
         <div class="patient-large-info" id="patient-details-box">
           <div class="patient-info-list">
             <div class="p-row-name">Név: <span id="p-name">-</span></div>
@@ -159,7 +158,6 @@
           </div>
         </div>
 
-        <!-- JOBB OLDAL: QR olvasó sáv -->
         <div class="form-group" style="margin-bottom: 0;">
           <label for="qr-input" style="font-weight: 600; color: #1e293b;">Beteg QR Kód Olvasása</label>
           <div class="input-with-button">
@@ -175,8 +173,9 @@
     <section class="card">
       <div class="table-header">
         <h2>Gyógyszerek</h2>
-        <button type="button" id="btn-open-scanner" class="btn btn-success" disabled style="background: #10b981; border-color: #059669;">
-          + Gyógyszer Hozzáadása (F2)
+        <!-- 2. MÓDOSÍTOTT GOMB: Hozzáadás F2 helyett + -->
+        <button type="button" id="btn-open-scanner" class="btn btn-success" disabled style="background: #10b981; border-color: #059669; font-size: 1.2rem; font-weight: bold; padding: 0.4rem 1rem;">
+          +
         </button>
       </div>
 
@@ -196,7 +195,7 @@
           </thead>
           <tbody id="med-table-body">
             <tr class="empty-row">
-              <td colspan="8">Még nincs rögzített gyógyszer ezen a tálcán. Olvassa be a beteg QR kódját, majd nyomja meg a "+ Gyógyszer Hozzáadása" gombot.</td>
+              <td colspan="8">Még nincs rögzített gyógyszer ezen a tálcán. Olvassa be a beteg QR kódját, majd nyomja meg a "+" gombot.</td>
             </tr>
           </tbody>
         </table>
@@ -207,8 +206,8 @@
     <section class="card">
       <h2>Megjegyzés & Lezárás</h2>
       <div class="summary-section" style="padding-top: 0.25rem;">
+        <!-- 1. TÖRÖLT CÍMKE: Nincs felette label szöveg -->
         <div class="form-group" style="margin-bottom: 1.75rem;">
-          <label for="dispensing-notes" style="font-weight: 600; color: #475569;">Asszisztensi Megjegyzés / Eltérés indoklása</label>
           <textarea id="dispensing-notes" rows="2" placeholder="Opcionális megjegyzés a tálcához (pl. szilárd adagolási forma felezve)..." style="background: white; border-radius: 8px; border: 1px solid #cbd5e1;"></textarea>
         </div>
 
