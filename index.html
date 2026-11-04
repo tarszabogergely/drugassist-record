@@ -11,22 +11,23 @@
 
   <!-- 1. Bejelentkező Kártya (Bejelentkezés előtt) -->
   <div id="login-container" class="auth-card">
-    <div class="logo">
-      <span class="badge">RECORD</span>
-      <h2>DrugAssist Record</h2>
-    </div>
-    <form id="login-form">
-      <div class="form-group">
-  <label>Felhasználónév</label>
-  <input type="text" id="login-username" placeholder="pl. asszisztens1" required autofocus>
-</div>
-      <div class="form-group">
-        <label>Jelszó</label>
-        <input type="password" id="login-password" required>
-      </div>
-      <button type="submit" class="btn btn-primary btn-large">Bejelentkezés</button>
-    </form>
+  <div class="logo">
+    <span class="badge">RECORD</span>
+    <h2>DrugAssist Record</h2>
   </div>
+  <!-- Form helyett sima div-et használunk, így az oldal garantáltan nem frissül újra! -->
+  <div id="login-form">
+    <div class="form-group">
+      <label>Felhasználónév</label>
+      <input type="text" id="login-username" placeholder="pl. asszisztens1" required autofocus>
+    </div>
+    <div class="form-group">
+      <label>Jelszó</label>
+      <input type="password" id="login-password" required>
+    </div>
+    <button type="button" id="btn-login-submit" class="btn btn-primary btn-large">Bejelentkezés</button>
+  </div>
+</div>
 
   <!-- 2. Főmenü Dashboard (Sikeres bejelentkezés után) -->
   <div id="dashboard-container" class="dashboard-card hidden">
