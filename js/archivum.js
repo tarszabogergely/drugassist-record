@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         wardsGrouped[wName].push(r);
       });
 
-      // HTML felépítése (Gyógyszerelési azonosító oszloppal)
+      // HTML felépítése (Gyógyszerelési azonosító a Státusz elé helyezve)
       wardsContainer.innerHTML = Object.entries(wardsGrouped).map(([wardName, recordsInWard]) => `
         <section class="card" style="margin-bottom: 2rem;">
           <div class="table-header" style="border-bottom: 2px solid #6f42c1; padding-bottom: 0.5rem; margin-bottom: 1rem;">
@@ -108,10 +108,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Gyógyszerelési Azonosító</th>
                   <th>Beteg Neve</th>
                   <th>TAJ szám</th>
                   <th>Ágyszám</th>
+                  <th>Gyógyszerelési Azonosító</th>
                   <th>Státusz</th>
                   <th>Műveletek</th>
                 </tr>
@@ -125,10 +125,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                   return `
                     <tr>
-                      <td><code>${trayId}</code></td>
                       <td><strong>${rec.patient_name}</strong></td>
                       <td>${rec.patient_taj || 'Nincs megadva'}</td>
                       <td>${rec.bed_number || '-'}</td>
+                      <td><code>${trayId}</code></td>
                       <td><span class="badge" style="${badgeStyle}">${statusText}</span></td>
                       <td>
                         <button type="button" onclick="viewTrayDetails('${rec.id}')" class="btn btn-secondary btn-sm">Gyógyszerelési előzmények</button>
@@ -136,6 +136,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </tr>
                   `;
                 }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `).join('');
               </tbody>
             </table>
           </div>
