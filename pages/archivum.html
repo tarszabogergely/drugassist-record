@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DrugAssist Record - Archívum & Napi Átadók</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <!-- jsPDF és AutoTable CDN könyvtárak a kliensoldali PDF generáláshoz -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+
+  <!-- Fejléc -->
+  <header class="app-header" style="background: #6f42c1;">
+    <div class="logo">
+      <a href="../index.html" class="back-link">← Főmenü</a>
+      <span class="badge" style="background: #593196;">NAPI NAPTÁR</span>
+      <h1>Gyógyszerelési Archívum & Átadók</h1>
+    </div>
+    <div class="user-info">
+      <span id="user-display">--</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Napválasztó Kártya -->
+    <section class="card">
+      <div class="table-header">
+        <h2>Dátum Kiválasztása</h2>
+        <button type="button" id="btn-today" class="btn btn-secondary btn-sm">Mai Nap</button>
+      </div>
+      <div class="patient-grid" style="grid-template-columns: 1fr 2fr;">
+        <div class="form-group">
+          <label for="archive-date-picker">Válasszon dátumot:</label>
+          <input type="date" id="archive-date-picker" style="font-size: 1.1rem; padding: 0.6rem;">
+        </div>
+        <div class="form-group" style="display: flex; align-items: flex-end;">
+          <button type="button" id="btn-load-archive" class="btn btn-primary" style="width: 100%;">Napi Adatok Betöltése</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Osztályonkénti Konténer (Dinamikusan generálódik) -->
+    <div id="wards-container">
+      <div class="card">
+        <p class="empty-row">Töltse be a kiválasztott nap adatait...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: Beteg Gyógyszerelési Előzményei -->
+  <div id="patient-history-modal" class="modal">
+    <div class="modal-content" style="max-width: 850px; width: 95%;">
+      <div class="modal-header" style="background: #6f42c1; color: white;">
+        <h3 style="margin:0;">Gyógyszerelési Részletek: <span id="h-patient-name">--</span></h3>
+        <span class="close-modal" id="btn-close-history-modal" style="color:white; cursor:pointer; font-size: 1.8rem;">&times;</span>
+      </div>
+
+      <div class="modal-body" style="padding: 1.5rem;">
+        <div id="modal-patient-info" style="margin-bottom: 1rem; background: #f8f9fa; padding: 0.8rem; border-radius: 4px;">
+          <!-- Dinamikus alapadatok -->
+        </div>
+
+        <h4>Rögzített Gyógyszerek Mátrixa:</h4>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Gyógyszernév</th>
+                <th>LOT / Lejárat</th>
+                <th>Reggel</th>
+                <th>Délben</th>
+                <th>Este</th>
+                <th>Éjjel</th>
+              </tr>
+            </thead>
+            <tbody id="patient-items-body">
+              <tr class="empty-row">
+                <td colspan="6">Betöltés...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript modulok -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/archivum.js"></script>
+</body>
+</html>
