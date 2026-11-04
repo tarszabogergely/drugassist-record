@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DrugAssist Record - Gyári Számok (LOT)</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .clickable-row {
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+    .clickable-row:hover {
+      background-color: #f0f9ff !important;
+    }
+    
+    .batch-list-table th, .batch-list-table td {
+      padding: 0.6rem 0.8rem;
+    }
+
+    .modal-med-badge {
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.25rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fejléc -->
+  <header class="app-header">
+    <div class="logo">
+      <h1>Gyári Számok & Lejáratok Kezelése (LOT)</h1>
+    </div>
+    <div class="user-info" style="display: flex; align-items: center; gap: 1rem;">
+      <a href="../index.html" class="back-link" style="color: white; text-decoration: none; font-weight: bold; background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 4px;">🏠 Főmenü</a>
+      <span id="user-display">--</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Keresősáv Kártya -->
+    <section class="card">
+      <div class="table-header">
+        <h2>Gyógyszer Keresése</h2>
+      </div>
+      <div class="patient-grid">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="batch-search-input">Keresés (Gyógyszernév, Vonalkód vagy Morfológia)</label>
+          <input type="text" id="batch-search-input" placeholder="Gépeljen a kereséshez..." autofocus style="font-size: 1.05rem; padding: 0.75rem;">
+        </div>
+      </div>
+    </section>
+
+    <!-- Gyógyszerlista Táblázat -->
+    <section class="card">
+      <div class="table-header">
+        <h2>Gyógyszerek & Rögzített Gyári Számok (<span id="total-med-count">0</span> tétel)</h2>
+        <button type="button" id="btn-refresh-batch-list" class="btn btn-secondary btn-sm">Frissítés</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Vonalkód (EAN/GTIN)</th>
+              <th>Gyógyszer Neve</th>
+              <th>Morfológia</th>
+              <th>Rögzített LOT-ok Száma</th>
+              <th>Művelet</th>
+            </tr>
+          </thead>
+          <tbody id="batch-med-table-body">
+            <tr class="empty-row">
+              <td colspan="5">Betöltés folyamatban...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: Gyári számok (LOT) Kezelése -->
+  <div id="batch-modal" class="modal">
+    <div class="modal-content" style="max-width: 750px; width: 95%;">
+      <div class="modal-header">
+        <h3 style="margin:0;">Gyári Számok (LOT) & Lejáratok</h3>
+        <span class="close-modal" id="btn-close-batch-modal" style="cursor:pointer; font-size: 1.8rem;">&times;</span>
+      </div>
+
+      <div class="modal-body" style="padding: 1.5rem;">
+        <!-- Kijelölt Gyógyszer Fejléce -->
+        <div class="modal-med-badge">
+          <div style="font-size: 1.15rem; font-weight: 700;" id="modal-med-name">--</div>
+          <div style="font-size: 0.88rem; opacity: 0.85; margin-top: 0.2rem;" id="modal-med-details">--</div>
+        </div>
+
+        <!-- Új LOT Felvitele Form -->
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
+          <h4 style="margin-top:0; margin-bottom: 0.75rem; color: #1e293b; font-size: 0.95rem;">+ Új Gyári Szám (LOT) Hozzáadása</h4>
+          <form id="add-batch-form" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.75rem; align-items: end;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="new-batch-lot" style="font-size: 0.82rem;">Gyári Szám (LOT)</label>
+              <input type="text" id="new-batch-lot" placeholder="Pl.: AB123456" required style="background: white;">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="new-batch-expiry" style="font-size: 0.82rem;">Lejárati Dátum</label>
+              <input type="date" id="new-batch-expiry" required style="background: white;">
+            </div>
+            <button type="submit" id="btn-save-new-batch" class="btn btn-success" style="padding: 0.6rem 1rem; background: #10b981; border-color: #059669;">Hozzáadás</button>
+          </form>
+        </div>
+
+        <!-- Rögzített LOT-ok Táblázata -->
+        <h4 style="margin-bottom: 0.5rem; color: #334155;">Meglévő Gyári Számok</h4>
+        <div class="table-wrapper" style="max-height: 280px; overflow-y: auto;">
+          <table class="data-table batch-list-table">
+            <thead>
+              <tr>
+                <th>Gyári Szám (LOT)</th>
+                <th>Lejárati Dátum</th>
+                <th>Műveletek</th>
+              </tr>
+            </thead>
+            <tbody id="batch-items-body">
+              <tr class="empty-row">
+                <td colspan="3">Nincs rögzített gyári szám ehhez a gyógyszerhez.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript modulok -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/batch.js"></script>
+</body>
+</html>
