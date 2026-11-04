@@ -3,84 +3,380 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DrugAssist Record - Bejelentkezés</title>
+  <title>DrugAssist – Gyógyszerbiztonsági Rendszer</title>
+  
   <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
+  
+  <!-- Supabase SDK & Config -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
 
-  <!-- Bejelentkező felület -->
-  <div id="login-container" class="auth-card">
-    <div class="logo">
-      <span class="badge">RECORD</span>
-      <h2>DrugAssist Record</h2>
+  <style>
+    /* Bejelentkező Képernyő Stílusai */
+    body.login-body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      height: 100vh;
+      background: linear-gradient(135deg, #eef2f7, #dfe6ee);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-container {
+      display: flex;
+      width: 900px;
+      height: 520px;
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+    }
+
+    .login-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(160deg, #ffffff, #f4f7fb);
+      padding: 40px;
+    }
+
+    .login-left img {
+      width: 240px;
+      margin-bottom: 20px;
+    }
+
+    .login-right {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .loginBox {
+      width: 280px;
+    }
+
+    .loginBox h2 {
+      margin-bottom: 25px;
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    .inputGroup {
+      position: relative;
+      margin-bottom: 18px;
+    }
+
+    .inputGroup input {
+      width: 100%;
+      padding: 14px 12px;
+      border-radius: 10px;
+      border: 1px solid #d0d7e2;
+      font-size: 15px;
+      background: #f9fbfd;
+      transition: 0.2s;
+      box-sizing: border-box;
+    }
+
+    .inputGroup input:focus {
+      outline: none;
+      border-color: #3498db;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+    }
+
+    .btnLogin {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 6px 15px rgba(52, 152, 219, 0.3);
+    }
+
+    .btnLogin:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(52, 152, 219, 0.4);
+    }
+
+    .error-msg {
+      color: #e74c3c;
+      font-size: 13px;
+      margin-bottom: 15px;
+      text-align: center;
+      min-height: 18px;
+    }
+
+    .login-footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #7f8c8d;
+      text-align: center;
+    }
+
+    /* Szélesített Dashboard Elrendezés (3 gomb egymás mellett) */
+    .dashboard-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .actions-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .btn-action-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 1.5rem;
+      background: white;
+      border-radius: 16px;
+      text-decoration: none;
+      color: #2c3e50;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+      transition: all 0.25s ease;
+      border: 1px solid #e2e8f0;
+      text-align: center;
+    }
+
+    .btn-action-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+    }
+
+    .btn-action-card .icon {
+      font-size: 3.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .btn-action-card .title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .btn-action-card .sub {
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+
+    /* Külön színszegélyek a 3 gombnak */
+    .card-gyogyszereles { border-top: 6px solid #3b82f6; }
+    .card-ellenorzes { border-top: 6px solid #10b981; }
+    .card-archivum { border-top: 6px solid #8b5cf6; }
+
+    .nav-tiles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+    }
+  </style>
+</head>
+
+<body class="login-body">
+
+  <!-- ================= 1. BEJELENTKEZÉSI NÉZET ================= -->
+  <div id="login-section" class="login-container">
+    <div class="login-left">
+      <img src="drugassistlogo.png" alt="DrugAssist Logo" onerror="this.src='https://drugassistlogo.netlify.app/drugassistlogo.png'">
     </div>
-    <div id="login-form">
-      <div class="form-group">
-        <label>Felhasználónév</label>
-        <input type="text" id="login-username" placeholder="pl. asszisztens1" required autofocus>
+
+    <div class="login-right">
+      <div class="loginBox">
+        <h2>Bejelentkezés</h2>
+
+        <div class="inputGroup">
+          <input type="text" id="username" placeholder="Felhasználónév" autofocus>
+        </div>
+
+        <div class="inputGroup">
+          <input type="password" id="password" placeholder="Jelszó">
+        </div>
+
+        <div id="loginError" class="error-msg"></div>
+
+        <button type="button" id="loginButton" class="btnLogin">Bejelentkezés</button>
+
+        <div class="login-footer">
+          Gyógyszerbiztonsági rendszer
+        </div>
       </div>
-      <div class="form-group">
-        <label>Jelszó</label>
-        <input type="password" id="login-password" required>
-      </div>
-      <button type="button" id="btn-login-submit" class="btn btn-primary btn-large">Bejelentkezés</button>
     </div>
   </div>
 
-  <!-- Főmenü Dashboard (Sikeres bejelentkezés után jelenik meg) -->
-  <div id="dashboard-container" class="dashboard-card hidden">
-    <header class="dashboard-header">
-      <h2>Gyógyszerelési Rendszer</h2>
-      <div class="user-status">
-        <span id="user-email-display">--</span>
-        <button id="btn-logout" class="btn btn-secondary btn-sm">Kijelentkezés</button>
+  <!-- ================= 2. DASHBOARD / KEZELŐFELÜLET NÉZET ================= -->
+  <div id="dashboard-section" style="display: none; width: 100%;">
+    
+    <!-- Fejléc (Jobb oldalon Felhasználó + Kijelentkezés) -->
+    <header class="app-header" style="background: #1e293b; color: white;">
+      <div class="logo">
+        <h1 style="margin: 0; font-size: 1.8rem; font-weight: 700;">DrugAssist</h1>
+      </div>
+      
+      <div class="user-info" style="display: flex; align-items: center; gap: 1.2rem;">
+        <span id="user-display" style="font-weight: 500;">--</span>
+        <button type="button" id="btn-logout" class="btn btn-secondary btn-sm" style="background: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">
+          🔒 Kijelentkezés
+        </button>
       </div>
     </header>
 
-    <!-- Fő Műveletek -->
-<div class="main-actions">
-  <a href="pages/gyogyszereles.html" class="btn-action btn-main">
-    <span class="icon">💊</span>
-    <span class="title">Gyógyszerelés</span>
-    <span class="sub">Tálca rögzítése & vonalkódolvasás</span>
-  </a>
-  
-  <a href="pages/ellenorzes.html" class="btn-action btn-main btn-verify">
-    <span class="icon">🔍</span>
-    <span class="title">Ellenőrzés</span>
-    <span class="sub">Gyógyszerészi validáció & lezárás</span>
-  </a>
+    <main class="dashboard-container">
+      
+      <!-- 3 NAGY GOMB EGYMÁS MELLETT -->
+      <section class="actions-grid-3">
+        <a href="pages/gyogyszereles.html" class="btn-action-card card-gyogyszereles">
+          <span class="icon">💊</span>
+          <span class="title">Gyógyszerelés</span>
+          <span class="sub">Tálca rögzítése & vonalkódolvasás</span>
+        </a>
+        
+        <a href="pages/ellenorzes.html" class="btn-action-card card-ellenorzes">
+          <span class="icon">🔍</span>
+          <span class="title">Ellenőrzés</span>
+          <span class="sub">Gyógyszerészi validáció & lezárás</span>
+        </a>
 
-  <!-- ÚJ ARCHÍVUM GOMB -->
-  <a href="pages/archivum.html" class="btn-action btn-main" style="border-left: 5px solid #6f42c1;">
-    <span class="icon">📁</span>
-    <span class="title">Archívum</span>
-    <span class="sub">Napi osztályos átadók & PDF nyomtatás</span>
-  </a>
-</div>
+        <a href="pages/archivum.html" class="btn-action-card card-archivum">
+          <span class="icon">📁</span>
+          <span class="title">Archívum</span>
+          <span class="sub">Napi osztályos átadók & PDF nyomtatás</span>
+        </a>
+      </section>
 
-    <hr class="divider">
+      <!-- További Modulok / Törzsadatok -->
+      <section class="card">
+        <h2 style="margin-top:0; margin-bottom: 1.2rem; color: #334155;">További Modulok</h2>
+        <div class="nav-tiles-grid">
+          <a href="pages/torzs.html" class="tile-btn">
+            <span class="tile-icon">📦</span>
+            <span class="tile-title">Gyógyszertörzs</span>
+            <span class="tile-desc">Morfológia & vonalkódok</span>
+          </a>
 
-    <!-- Másodlagos Funkciók -->
-    <div class="secondary-actions">
-      <a href="pages/torzs.html" class="btn-action btn-sub">
-        <span class="icon">📦</span>
-        <span>Gyógyszertörzs</span>
-      </a>
-      <a href="pages/betegek.html" class="btn-action btn-sub">
-        <span class="icon">👤</span>
-        <span>Betegek</span>
-      </a>
-      <a href="pages/felhasznalas.html" class="btn-action btn-sub">
-        <span class="icon">📊</span>
-        <span>Felhasználás</span>
-      </a>
-    </div>
+          <a href="pages/betegek.html" class="tile-btn">
+            <span class="tile-icon">👥</span>
+            <span class="tile-title">Betegek</span>
+            <span class="tile-desc">Nyilvántartás & előzmények</span>
+          </a>
+
+          <a href="pages/felhasznalas.html" class="tile-btn">
+            <span class="tile-icon">📊</span>
+            <span class="tile-title">Felhasználás</span>
+            <span class="tile-desc">Statisztikák & kimutatások</span>
+          </a>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <!-- Javascript betöltése (Szigorú sorrendben!) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-config.js"></script>
-  <script src="js/auth.js"></script>
+  <!-- JavaScript Logika -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginSection = document.getElementById('login-section');
+      const dashboardSection = document.getElementById('dashboard-section');
+      
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+      const loginButton = document.getElementById('loginButton');
+      const loginError = document.getElementById('loginError');
+      const btnLogout = document.getElementById('btn-logout');
+      const userDisplay = document.getElementById('user-display');
+
+      // 1. Állapot ellenőrzése
+      checkSession();
+
+      function checkSession() {
+        const savedUser = sessionStorage.getItem('drugassist_user');
+        if (savedUser) {
+          const user = JSON.parse(savedUser);
+          document.body.className = ''; // Háttér átállítása a sima oldalra
+          loginSection.style.display = 'none';
+          dashboardSection.style.display = 'block';
+          userDisplay.innerText = `${user.full_name} (${user.role === 'pharmacist' ? 'Gyógyszerész' : 'Asszisztens'})`;
+        } else {
+          document.body.className = 'login-body';
+          loginSection.style.display = 'flex';
+          dashboardSection.style.display = 'none';
+        }
+      }
+
+      // 2. Bejelentkezés események
+      loginButton.addEventListener('click', handleLogin);
+      passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleLogin();
+      });
+      usernameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') passwordInput.focus();
+      });
+
+      async function handleLogin() {
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (!username || !password) {
+          loginError.innerText = 'Kérjük, adja meg a felhasználónevet és jelszót!';
+          return;
+        }
+
+        loginButton.disabled = true;
+        loginButton.innerText = 'Bejelentkezés...';
+        loginError.innerText = '';
+
+        try {
+          // Supabase profiles tábla lekérdezése
+          const { data: user, error } = await db
+            .from('profiles')
+            .select('*')
+            .eq('username', username)
+            .eq('password_hash', password)
+            .maybeSingle();
+
+          if (error || !user) {
+            loginError.innerText = 'Hibás felhasználónév vagy jelszó!';
+            return;
+          }
+
+          // Sikeres bejelentkezés -> Munkamenet elmentése
+          sessionStorage.setItem('drugassist_user', JSON.stringify({
+            id: user.id,
+            username: user.username,
+            full_name: user.full_name,
+            role: user.role
+          }));
+
+          checkSession();
+        } catch (err) {
+          console.error('Bejelentkezési hiba:', err);
+          loginError.innerText = 'Hálózati vagy adatbázis hiba történt.';
+        } finally {
+          loginButton.disabled = false;
+          loginButton.innerText = 'Bejelentkezés';
+        }
+      }
+
+      // 3. Kijelentkezés
+      if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+          sessionStorage.removeItem('drugassist_user');
+          checkSession();
+        });
+      }
+    });
+  </script>
 </body>
 </html>
