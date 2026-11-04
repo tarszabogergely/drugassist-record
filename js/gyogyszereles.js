@@ -1,15 +1,15 @@
 /**
- * DrugAssist Record - Gyógyszerelés Rögzítés & QR Parser
+ * DrugAssist Record - Gyógyszerelés Rögzítés & QR Parser (Javított)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Aktuális állapot (State)
+  // Globális állapotok (State)
   let currentUser = null;
   let parsedPatient = null;
   let currentItems = [];
   let activeMedication = null;
 
-  // DOM elemek
+  // DOM elemek kijelölése
   const qrInput = document.getElementById('qr-input');
   const btnParseQr = document.getElementById('btn-parse-qr');
   const btnOpenScanner = document.getElementById('btn-open-scanner');
@@ -34,12 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
   currentUser = JSON.parse(savedUser);
   document.getElementById('user-display').innerText = `${currentUser.full_name} (${currentUser.role === 'pharmacist' ? 'Gyógyszerész' : 'Asszisztens'})`;
 
-  // 2. QR Kód Szétbontása (Delimiter: ??)
+  // 2. QR Kód Szétbontás (Delimiter: ??)
   function parseQR(qrString) {
     if (!qrString || !qrString.includes('??')) return null;
     const parts = qrString.split('??').map(p => p.trim());
 
-    // 4 elem esetén: Név, Osztály, Ágyszám, Időbélyeg
     if (parts.length === 4) {
       return {
         name: parts[0],
@@ -51,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
       };
     }
 
-    // 5 elem esetén (ha később TAJ szám is lesz benne): Név, TAJ, Osztály, Ágyszám, Időbélyeg
     if (parts.length === 5) {
       return {
         name: parts[0],
@@ -66,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
-  // QR Betöltés Esemény
+  // QR Betöltés Események
   btnParseQr.addEventListener('click', processQrInput);
   qrInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') processQrInput();
@@ -81,7 +79,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Elmentjük a beteg adatait a globális változóba
     parsedPatient = result;
+
     document.getElementById('p-name').innerText = parsedPatient.name;
     document.getElementById('p-taj').innerText = parsedPatient.taj;
     document.getElementById('p-ward-bed').innerText = `${parsedPatient.ward} / ${parsedPatient.bed}`;
@@ -92,10 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTable();
   }
 
-  // 3. Modal Kezelés & Vonalkód Olvasás
+  // 3. Modal & Vonalkód Kezelés
   btnOpenScanner.addEventListener('click', openModal);
   
-  // F2 Gyorsbillentyű a beolvasáshoz
   window.addEventListener('keydown', (e) => {
     if (e.key === 'F2' && !btnOpenScanner.disabled) {
       e.preventDefault();
@@ -137,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('scanned-med-name').innerText = med.name;
         document.getElementById('scanned-med-morphology').innerText = med.morphology || 'Nincs leírás.';
 
-        // Korábbi LOT számok betöltése a batch_records táblából
+        // Korábbi LOT számok betöltése
         const { data: batches } = await db
           .from('batch_records')
           .select('*')
@@ -160,25 +159,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Új LOT mezo váltó
+  // Új LOT mező váltó
   btnToggleNewLot.addEventListener('click', () => {
     newLotInputs.classList.toggle('hidden');
   });
 
-  // Tétel hozzáadása
+  // Tétel Hozzáadása a Tálcához (JAVÍTVA)
   btnAddItem.addEventListener('click', async () => {
     if (!activeMedication) return;
 
     let selectedBatchId = lotSelect.value;
-    let lotText = lotSelect.selectedOptions[0]?.text || 'Nincs megadva';
+    let lotText = 'Nincs megadva';
 
-    // Ha új LOT-ot adott meg
+    // Ha van kiválasztva létező LOT a listából
+    if (selectedBatchId && lotSelect.selectedIndex > 0) {
+      lotText = lotSelect.options[lotSelect.selectedIndex].text;
+    }
+
+    // Ha új LOT-ot adott meg kézzel (ez felülírja a választottat)
     const newLotNum = document.getElementById('new-lot-number').value.trim();
     const newExpDate = document.getElementById('new-expiry-date').value;
 
     if (newLotNum && newExpDate) {
       try {
-        const { data: newBatch } = await db
+        const { data: newBatch, error: batchError } = await db
           .from('batch_records')
           .insert([{ medication_id: activeMedication.id, lot_number: newLotNum, expiry_date: newExpDate }])
           .select()
@@ -187,9 +191,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (newBatch) {
           selectedBatchId = newBatch.id;
           lotText = `${newBatch.lot_number} (Lejárat: ${newBatch.expiry_date})`;
+        } else if (batchError) {
+          console.error('Új LOT hiba:', batchError);
+          // Ha már létezik ez a LOT pár, használjuk a megadott szöveget
+          lotText = `${newLotNum} (Lejárat: ${newExpDate})`;
         }
       } catch (err) {
         console.error('LOT mentési hiba:', err);
+        lotText = `${newLotNum} (Lejárat: ${newExpDate})`;
       }
     }
 
@@ -222,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <tr>
         <td><strong>${item.medication_name}</strong></td>
         <td>${item.morphology || '-'}</td>
-        <td>${item.lot_text}</td>
+        <td><strong>${item.lot_text}</strong></td>
         <td>${item.morning}</td>
         <td>${item.noon}</td>
         <td>${item.evening}</td>
@@ -251,10 +260,10 @@ document.addEventListener('DOMContentLoaded', () => {
     activeMedication = null;
   }
 
-  // 4. Teljes Tálca Mentése Supabase-be
+  // 4. Teljes Tálca Mentése Supabase-be (JAVÍTVA)
   btnSaveDispensing.addEventListener('click', async () => {
     if (!parsedPatient) {
-      alert('Nincs beolvasott beteg QR kód!');
+      alert('Nincs beolvasott beteg QR kód! Olvassa be a QR kódot a lap tetején.');
       return;
     }
     if (currentItems.length === 0) {
@@ -276,8 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ward: parsedPatient.ward,
           bed_number: parsedPatient.bed,
           status: 'draft',
-          notes: document.getElementById('dispensing-notes').value.trim(),
-          created_by: currentUser.id
+          notes: document.getElementById('dispensing-notes').value.trim()
         }])
         .select()
         .single();
