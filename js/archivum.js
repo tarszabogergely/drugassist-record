@@ -25,28 +25,34 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = '../index.html';
     return;
   }
-  const currentUser = JSON.parse(savedUser);
+  currentUser = JSON.parse(savedUser);
   const userDisp = document.getElementById('user-display');
   if (userDisp) {
     userDisp.innerText = `${currentUser.full_name} (${currentUser.role === 'pharmacist' ? 'Gyógyszerész' : 'Asszisztens'})`;
   }
 
-  // Datum beállítása a mai napra
   if (datePicker) datePicker.value = selectedDateStr;
 
   if (btnToday) {
     btnToday.addEventListener('click', () => {
       selectedDateStr = new Date().toISOString().split('T')[0];
-      datePicker.value = selectedDateStr;
+      if (datePicker) datePicker.value = selectedDateStr;
       loadArchiveForDate();
     });
   }
 
   if (btnLoadArchive) {
     btnLoadArchive.addEventListener('click', () => {
-      selectedDateStr = datePicker.value;
+      if (datePicker) selectedDateStr = datePicker.value;
       loadArchiveForDate();
     });
+  }
+
+  // QR kód szétbontása az azonosító kinyeréséhez
+  function extractTrayId(rawQr) {
+    if (!rawQr || !rawQr.includes('??')) return '-';
+    const parts = rawQr.split('??');
+    return parts[parts.length - 1] || '-';
   }
 
   // 2. Napi Adatok Betöltése Supabase-ből
@@ -58,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
     wardsContainer.innerHTML = '<div class="card"><p class="empty-row">Napi adatok betöltése...</p></div>';
 
     try {
-      // Megadott nap kezdete és vége ISO formátumban
       const startOfDay = `${selectedDateStr}T00:00:00.000Z`;
       const endOfDay = `${selectedDateStr}T23:59:59.999Z`;
 
@@ -89,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         wardsGrouped[wName].push(r);
       });
 
-      // HTML felépítése osztályonként
+      // HTML felépítése (Gyógyszerelési azonosító oszloppal)
       wardsContainer.innerHTML = Object.entries(wardsGrouped).map(([wardName, recordsInWard]) => `
         <section class="card" style="margin-bottom: 2rem;">
           <div class="table-header" style="border-bottom: 2px solid #6f42c1; padding-bottom: 0.5rem; margin-bottom: 1rem;">
@@ -103,26 +108,27 @@ document.addEventListener('DOMContentLoaded', () => {
             <table class="data-table">
               <thead>
                 <tr>
+                  <th>Gyógyszerelési Azonosító</th>
                   <th>Beteg Neve</th>
                   <th>TAJ szám</th>
                   <th>Ágyszám</th>
-                  <th>Időpont</th>
                   <th>Státusz</th>
                   <th>Műveletek</th>
                 </tr>
               </thead>
               <tbody>
                 ${recordsInWard.map(rec => {
+                  const trayId = extractTrayId(rec.qr_identifier);
                   const isVerified = rec.status === 'verified';
                   const badgeStyle = isVerified ? 'background:#28a745; color:white;' : 'background:#ffc107; color:#333;';
                   const statusText = isVerified ? '✓ Ellenőrizve' : 'Piszkozat';
 
                   return `
                     <tr>
+                      <td><code>${trayId}</code></td>
                       <td><strong>${rec.patient_name}</strong></td>
                       <td>${rec.patient_taj || 'Nincs megadva'}</td>
                       <td>${rec.bed_number || '-'}</td>
-                      <td>${new Date(rec.created_at).toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' })}</td>
                       <td><span class="badge" style="${badgeStyle}">${statusText}</span></td>
                       <td>
                         <button type="button" onclick="viewTrayDetails('${rec.id}')" class="btn btn-secondary btn-sm">Gyógyszerelési előzmények</button>
@@ -147,8 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const rec = dayRecords.find(r => r.id === recordId);
     if (!rec) return;
 
+    const trayId = extractTrayId(rec.qr_identifier);
     hPatientName.innerText = rec.patient_name;
     modalPatientInfo.innerHTML = `
+      <div><strong>Gyógyszerelési Azonosító:</strong> <code>${trayId}</code></div>
       <div><strong>Osztály / Ágy:</strong> ${rec.ward} / ${rec.bed_number || '-'}</div>
       <div><strong>TAJ:</strong> ${rec.patient_taj || 'Nincs megadva'} | <strong>Státusz:</strong> ${rec.status === 'verified' ? 'Ellenőrizve' : 'Piszkozat'}</div>
       <div><strong>Megjegyzés:</strong> <em>${rec.notes || 'Nincs megjegyzés.'}</em></div>
@@ -201,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 4. OSZTÁLYOS PDF ÁTADÓ GENERÁLÁSA (jsPDF + AutoTable)
+  // 4. OSZTÁLYOS PDF ÁTADÓ GENERÁLÁSA
   window.generateWardPDF = async function(wardName) {
     const wardRecords = dayRecords.filter(r => (r.ward || 'Egyéb Osztály') === wardName);
     if (wardRecords.length === 0) return;
@@ -209,18 +217,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
 
-    // --- FEJLÉC ---
+    // FEJLÉC
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text("DrugAssist", 14, 15);
     doc.setFont("helvetica", "normal");
     doc.text("Markusovszky Kórház", 14, 20);
 
-    // Dátum jobbra fent
     doc.setFontSize(10);
     doc.text(`Dátum: ${selectedDateStr}`, 196, 15, { align: 'right' });
 
-    // Osztály neve (NAGY MÉRET)
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
     doc.text(`Osztály: ${wardName}`, 14, 32);
@@ -230,16 +236,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let startY = 42;
 
-    // --- BETEGEK ÉS GYÓGYSZEREK BLOKKJA ---
     for (const rec of wardRecords) {
-      // 1. Beteg adatai
-      doc.setFontSize(11);
+      const trayId = extractTrayId(rec.qr_identifier);
+      doc.setFontSize(10.5);
       doc.setFont("helvetica", "bold");
-      const pHeader = `Beteg: ${rec.patient_name}  |  TAJ: ${rec.patient_taj || 'Nincs'}  |  Ágy: ${rec.bed_number || '-'}`;
+      const pHeader = `Azonosító: ${trayId} | Beteg: ${rec.patient_name} | TAJ: ${rec.patient_taj || 'Nincs'} | Ágy: ${rec.bed_number || '-'}`;
       doc.text(pHeader, 14, startY);
       startY += 5;
 
-      // Tételek lekérdezése az adott tálcához
       const { data: items } = await db
         .from('dispensed_items')
         .select(`
@@ -263,7 +267,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ];
       });
 
-      // Gyógyszeres táblázat kirajzolása AutoTable-lel
       doc.autoTable({
         startY: startY,
         head: [['Gyógyszer neve', 'Adagolás (R - D - E - É)', 'Gyári szám (LOT)', 'Lejárat']],
@@ -276,35 +279,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
       startY = doc.lastAutoTable.finalY + 8;
 
-      // Lap alja ellenőrzés (ha túl sok a beteg, új oldal nyitása)
       if (startY > 230) {
         doc.addPage();
         startY = 20;
       }
     }
 
-    // --- ALÁÍRÁSOK A LAP ALJÁN (Három vonal egymás mellett) ---
+    // ALÁÍRÁSOK
     const pageCount = doc.internal.getNumberOfPages();
-    doc.setPage(pageCount); // Mindig az utolsó lap aljára helyezi el
+    doc.setPage(pageCount);
 
     const footerY = 270;
     doc.setLineWidth(0.3);
 
-    // 1. Átadta
     doc.line(14, footerY, 65, footerY);
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.text("Átadta (Gyógyszertár)", 39, footerY + 5, { align: 'center' });
 
-    // 2. Átvette
     doc.line(77, footerY, 128, footerY);
-    doc.text("Átvette (Osztály)", 1025, footerY + 5, { align: 'center' });
+    doc.text("Átvette (Osztály)", 102.5, footerY + 5, { align: 'center' });
 
-    // 3. Ellenőrizte
     doc.line(140, footerY, 191, footerY);
     doc.text("Ellenőrizte (Gyógyszerész)", 165, footerY + 5, { align: 'center' });
 
-    // PDF letöltése
     doc.save(`DrugAssist_Atado_${wardName}_${selectedDateStr}.pdf`);
   };
 });
