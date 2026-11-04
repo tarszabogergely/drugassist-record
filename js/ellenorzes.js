@@ -1,5 +1,5 @@
 /**
- * DrugAssist Record - Gyógyszerészi Ellenőrző Modul
+ * DrugAssist Record - Modalos Gyógyszerészi Ellenőrző Modul
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,9 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSearchQr = document.getElementById('btn-search-qr');
   const btnRefreshList = document.getElementById('btn-refresh-list');
   const pendingTraysBody = document.getElementById('pending-trays-body');
-  const verifyDetailsSection = document.getElementById('verify-details-section');
+  
+  const verifyModal = document.getElementById('verify-modal');
+  const btnCloseVerifyModal = document.getElementById('btn-close-verify-modal');
   const verifyItemsBody = document.getElementById('verify-items-body');
+  const confirmQrInput = document.getElementById('verify-confirm-qr-input');
   const btnApproveDispensing = document.getElementById('btn-approve-dispensing');
+  const roleWarningText = document.getElementById('role-warning-text');
 
   // 1. Munkamenet ellenőrzése
   const savedUser = sessionStorage.getItem('drugassist_user');
@@ -30,12 +34,15 @@ document.addEventListener('DOMContentLoaded', () => {
     userDisp.innerText = `${currentUser.full_name} (${currentUser.role === 'pharmacist' ? 'Gyógyszerész' : 'Asszisztens'})`;
   }
 
-  // 2. Várakozó (draft) tálcák betöltése
+  // Asszisztens esetén figyelmeztető szöveg megjelenítése
+  if (currentUser.role !== 'pharmacist') {
+    if (roleWarningText) roleWarningText.classList.remove('hidden');
+  }
+
+  // 2. Várakozó tálcák betöltése
   loadPendingTrays();
 
-  if (btnRefreshList) {
-    btnRefreshList.addEventListener('click', loadPendingTrays);
-  }
+  if (btnRefreshList) btnRefreshList.addEventListener('click', loadPendingTrays);
 
   async function loadPendingTrays() {
     try {
@@ -63,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${rec.patient_taj || 'Nincs megadva'}</td>
           <td>${new Date(rec.created_at).toLocaleString('hu-HU')}</td>
           <td>
-            <button type="button" onclick="selectTray('${rec.id}')" class="btn btn-primary btn-sm">Ellenőrzés Megnyitása</button>
+            <button type="button" onclick="openVerifyModal('${rec.id}')" class="btn btn-primary btn-sm">Ellenőrzés Megnyitása</button>
           </td>
         </tr>
       `).join('');
@@ -73,25 +80,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 3. Tálca megnyitása ID vagy QR alapján
-  window.selectTray = async function(recordId) {
+  // 3. Modal Nyitás kattintásra
+  window.openVerifyModal = async function(recordId) {
     const record = pendingRecords.find(r => r.id === recordId);
     if (record) {
-      await displayRecordDetails(record);
+      await setupAndOpenModal(record);
     }
   };
 
-  // QR Kódos gyorskeresés
-  if (btnSearchQr) {
-    btnSearchQr.addEventListener('click', searchByQr);
-  }
+  // QR Kódos Nyitás
+  if (btnSearchQr) btnSearchQr.addEventListener('click', searchAndOpenByQr);
   if (verifyQrInput) {
     verifyQrInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') searchByQr();
+      if (e.key === 'Enter') searchAndOpenByQr();
     });
   }
 
-  async function searchByQr() {
+  async function searchAndOpenByQr() {
     const qrVal = verifyQrInput.value.trim();
     if (!qrVal) return;
 
@@ -108,23 +113,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      await displayRecordDetails(record);
+      await setupAndOpenModal(record);
     } catch (err) {
       console.error('QR keresési hiba:', err);
       alert('Hiba történt a QR keresés során.');
     }
   }
 
-  // Tálca részleteinek és gyógyszereinek megjelenítése
-  async function displayRecordDetails(record) {
+  // Modal Beállítása & Megnyitása
+  async function setupAndOpenModal(record) {
     activeRecord = record;
 
     document.getElementById('v-patient-name').innerText = record.patient_name;
     document.getElementById('v-ward-bed').innerText = `${record.ward} / ${record.bed_number || '-'}`;
     document.getElementById('v-created-at').innerText = new Date(record.created_at).toLocaleString('hu-HU');
-    document.getElementById('verify-notes-display').innerText = record.notes || 'Nincs megjegyzés.';
+    document.getElementById('v-notes-display').innerText = record.notes || 'Nincs megjegyzés.';
+    
+    // Várt QR kód kiírása segítségként
+    document.getElementById('v-expected-qr').innerText = record.qr_identifier;
 
-    // Tételek lekérdezése a gyógyszertörzzsel és a batch adatbázissal
+    // QR ellenőrző mező és gomb alaphelyzetbe állítása
+    confirmQrInput.value = '';
+    btnApproveDispensing.disabled = true;
+    btnApproveDispensing.style.opacity = '0.5';
+
+    // Tételek lekérdezése
     try {
       const { data: items, error } = await db
         .from('dispensed_items')
@@ -163,48 +176,76 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
       }
 
-      verifyDetailsSection.classList.remove('hidden');
-      verifyDetailsSection.scrollIntoView({ behavior: 'smooth' });
+      verifyModal.style.display = 'flex';
+      confirmQrInput.focus();
     } catch (err) {
       console.error('Tételek lekérdezési hibája:', err);
       alert('Nem sikerült betölteni a tálca gyógyszer-részleteit.');
     }
   }
 
-  // 4. Tálca Jóváhagyása & Lezárása
-  if (btnApproveDispensing) {
-    btnApproveDispensing.addEventListener('click', async () => {
-      if (!activeRecord) return;
-
-      const confirmApprove = confirm(`Biztosan jóváhagyja és lezárja ${activeRecord.patient_name} gyógyszerelési tálcáját?`);
-      if (!confirmApprove) return;
-
-      btnApproveDispensing.disabled = true;
-      btnApproveDispensing.innerText = 'Jóváhagyás folyamatban...';
-
-      try {
-        const { error } = await db
-          .from('dispensing_records')
-          .update({
-            status: 'verified',
-            verified_by: currentUser.id,
-            verified_at: new Date().toISOString()
-          })
-          .eq('id', activeRecord.id);
-
-        if (error) throw error;
-
-        alert('Tálca sikeresen ellenőrizve és jóváhagyva!');
-        verifyDetailsSection.classList.add('hidden');
-        activeRecord = null;
-        await loadPendingTrays();
-      } catch (err) {
-        console.error('Jóváhagyási hiba:', err);
-        alert('Hiba történt a jóváhagyás során: ' + err.message);
-      } finally {
-        btnApproveDispensing.disabled = false;
-        btnApproveDispensing.innerText = '✓ Tálca Ellenőrizve és Jóváhagyva (Lezárás)';
-      }
+  // Modal Bezárás
+  if (btnCloseVerifyModal) {
+    btnCloseVerifyModal.addEventListener('click', () => {
+      verifyModal.style.display = 'none';
+      activeRecord = null;
     });
+  }
+
+  // 4. QR Kód Validáció a Modalban (Csak egyezés esetén engedi a gombot)
+  confirmQrInput.addEventListener('input', checkQrMatch);
+  confirmQrInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !btnApproveDispensing.disabled) {
+      approveTray();
+    }
+  });
+
+  function checkQrMatch() {
+    if (!activeRecord) return;
+    const typedQr = confirmQrInput.value.trim();
+
+    // Csak akkor engedélyezi, ha megegyezik a QR kód ÉS a felhasználó Gyógyszerész!
+    if (typedQr === activeRecord.qr_identifier && currentUser.role === 'pharmacist') {
+      btnApproveDispensing.disabled = false;
+      btnApproveDispensing.style.opacity = '1';
+    } else {
+      btnApproveDispensing.disabled = true;
+      btnApproveDispensing.style.opacity = '0.5';
+    }
+  }
+
+  // 5. Tálca Jóváhagyása & Lezárása
+  if (btnApproveDispensing) {
+    btnApproveDispensing.addEventListener('click', approveTray);
+  }
+
+  async function approveTray() {
+    if (!activeRecord || currentUser.role !== 'pharmacist') return;
+
+    btnApproveDispensing.disabled = true;
+    btnApproveDispensing.innerText = 'Jóváhagyás folyamatban...';
+
+    try {
+      const { error } = await db
+        .from('dispensing_records')
+        .update({
+          status: 'verified',
+          verified_by: currentUser.id,
+          verified_at: new Date().toISOString()
+        })
+        .eq('id', activeRecord.id);
+
+      if (error) throw error;
+
+      alert('Tálca sikeresen ellenőrizve és lezárva!');
+      verifyModal.style.display = 'none';
+      activeRecord = null;
+      await loadPendingTrays();
+    } catch (err) {
+      console.error('Jóváhagyási hiba:', err);
+      alert('Hiba történt a jóváhagyás során: ' + err.message);
+    } finally {
+      btnApproveDispensing.innerText = '✓ Tálca Ellenőrizve és Jóváhagyva';
+    }
   }
 });
