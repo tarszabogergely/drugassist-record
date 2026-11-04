@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DrugAssist Record - Betegek</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- Fejléc -->
+  <header class="app-header">
+    <div class="logo">
+      <a href="../index.html" class="back-link">← Főmenü</a>
+      <span class="badge">NYILVÁNTARTÁS</span>
+      <h1>Betegek Törzse és Előzményei</h1>
+    </div>
+    <div class="user-info">
+      <span id="user-display">--</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Kereső és Szűrő Kártya -->
+    <section class="card">
+      <h2>Betegek Keresése & Szűrése</h2>
+      <div class="patient-grid">
+        <div class="form-group">
+          <label for="patient-search-input">Keresés (Név, Osztály, Ágyszám vagy TAJ)</label>
+          <input type="text" id="patient-search-input" placeholder="Írja be a beteg nevét vagy osztályát..." autofocus>
+        </div>
+      </div>
+    </section>
+
+    <!-- Beteglista Táblázat -->
+    <section class="card">
+      <div class="table-header">
+        <h2>Rögzített Betegek Listája</h2>
+        <button type="button" id="btn-refresh-patients" class="btn btn-secondary btn-sm">Frissítés</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Beteg Neve</th>
+              <th>TAJ szám</th>
+              <th>Osztály</th>
+              <th>Ágyszám</th>
+              <th>Első Rögzítés</th>
+              <th>Műveletek</th>
+            </tr>
+          </thead>
+          <tbody id="patients-table-body">
+            <tr class="empty-row">
+              <td colspan="6">Betöltés folyamatban...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: Beteg Gyógyszerelési Előzményei -->
+  <div id="patient-history-modal" class="modal">
+    <div class="modal-content" style="max-width: 850px; width: 95%;">
+      <div class="modal-header">
+        <h3 style="margin:0;">Beteg Előzményei: <span id="h-patient-name">--</span></h3>
+        <span class="close-modal" id="btn-close-history-modal" style="cursor:pointer; font-size: 1.8rem;">&times;</span>
+      </div>
+
+      <div class="modal-body" style="padding: 1.5rem;">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Rögzítés Ideje</th>
+                <th>Osztály / Ágy</th>
+                <th>Státusz</th>
+                <th>Megjegyzés</th>
+              </tr>
+            </thead>
+            <tbody id="patient-history-body">
+              <tr class="empty-row">
+                <td colspan="4">Keresés...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript modulok -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/betegek.js"></script>
+</body>
+</html>
