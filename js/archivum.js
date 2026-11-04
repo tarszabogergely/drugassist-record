@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
     doc.text("Átvette (Osztály)", 102.5, footerY + 5, { align: 'center' });
 
     doc.line(140, footerY, 191, footerY);
-    doc.text("Ellenőrizte (Gyógyszerész)", 165, footerY + 5, { align: 'center' });
+    doc.text("Ellenörizte (Osztály)", 165, footerY + 5, { align: 'center' });
 
     doc.save(`DrugAssist_Atado_${wardName}_${selectedDateStr}.pdf`);
   };
