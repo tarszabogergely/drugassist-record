@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DrugAssist Record - Felhasználás</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- Fejléc -->
+  <header class="app-header" style="background: #17a2b8;">
+    <div class="logo">
+      <a href="../index.html" class="back-link">← Főmenü</a>
+      <span class="badge" style="background: #117a8b;">KIMUTATÁS</span>
+      <h1>Gyógyszerfelhasználás & Statisztika</h1>
+    </div>
+    <div class="user-info">
+      <span id="user-display">--</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Összegző Kártyák (KPI) -->
+    <div class="patient-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 1.5rem;">
+      <div class="card" style="text-align: center; padding: 1rem;">
+        <h3 style="font-size: 2.2rem; margin: 0; color: #0056b3;" id="kpi-trays">0</h3>
+        <span style="color: #666; font-size: 0.9rem;">Kiadott Tálca</span>
+      </div>
+      <div class="card" style="text-align: center; padding: 1rem;">
+        <h3 style="font-size: 2.2rem; margin: 0; color: #28a745;" id="kpi-med-types">0</h3>
+        <span style="color: #666; font-size: 0.9rem;">Eltérő Gyógyszer</span>
+      </div>
+      <div class="card" style="text-align: center; padding: 1rem;">
+        <h3 style="font-size: 2.2rem; margin: 0; color: #fd7e14;" id="kpi-total-doses">0</h3>
+        <span style="color: #666; font-size: 0.9rem;">Összes Kiadott Adag (Egység)</span>
+      </div>
+    </div>
+
+    <!-- Szűrők -->
+    <section class="card">
+      <div class="table-header">
+        <h2>Szűrési Feltételek</h2>
+        <button type="button" id="btn-apply-filter" class="btn btn-primary">Szűrés Alkalmazása</button>
+      </div>
+      <div class="patient-grid">
+        <div class="form-group">
+          <label for="filter-status">Státusz</label>
+          <select id="filter-status">
+            <option value="verified" selected>Csak Ellenőrzött (Verified)</option>
+            <option value="draft">Csak Piszkozat (Draft)</option>
+            <option value="all">Minden Tálca</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="filter-ward">Osztály Szűrő</label>
+          <input type="text" id="filter-ward" placeholder="Összes osztály (vagy pl. Sebészet)">
+        </div>
+      </div>
+    </section>
+
+    <!-- Gyógyszerenkénti Összesítő Táblázat -->
+    <section class="card">
+      <div class="table-header">
+        <h2>Gyógyszerenkénti Felhasználás Summary</h2>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Gyógyszernév</th>
+              <th>LOT / Lejárat</th>
+              <th>Reggel</th>
+              <th>Délben</th>
+              <th>Este</th>
+              <th>Éjjel</th>
+              <th>Összesen Kiadva (Egység)</th>
+            </tr>
+          </thead>
+          <tbody id="med-summary-body">
+            <tr class="empty-row">
+              <td colspan="7">Betöltés folyamatban...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Osztályos BONTÁS -->
+    <section class="card">
+      <div class="table-header">
+        <h2>Felhasználás Osztályok Szerint</h2>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Osztály Neve</th>
+              <th>Tálcák Száma</th>
+              <th>Kiadott Gyógyszeradagok Összesen</th>
+            </tr>
+          </thead>
+          <tbody id="ward-summary-body">
+            <tr class="empty-row">
+              <td colspan="3">Betöltés folyamatban...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- JavaScript modulok -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/felhasznalas.js"></script>
+</body>
+</html>
