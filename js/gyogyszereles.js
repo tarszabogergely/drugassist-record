@@ -79,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
       rawQr: rawVal
     };
 
-    // DOM elemek frissítése
     if (pName) pName.innerText = currentPatient.name;
     if (pTaj) pTaj.innerText = 'Lekérdezés...';
     if (pWard) pWard.innerText = currentPatient.ward;
@@ -117,18 +116,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 3. Modal Nyitása & Gyorsgombok (F2 & F3)
+  // 3. Modal Nyitása, Esc Bezárás & Ctrl+Enter Lezárás Gyorsgombok
   if (btnOpenScanner) {
     btnOpenScanner.addEventListener('click', openScanModal);
   }
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'F2') {
+    // 4. MODALBÓL KILÉPÉS ESC-EL
+    if (e.key === 'Escape') {
+      if (scanModal && scanModal.style.display === 'flex') {
+        scanModal.style.display = 'none';
+      }
+    } 
+    // 3. LEZÁRÁS GYORSGOMB: CTRL + ENTER
+    else if (e.ctrlKey && e.key === 'Enter') {
       e.preventDefault();
-      if (btnOpenScanner && !btnOpenScanner.disabled) openScanModal();
-    } else if (e.key === 'F3') {
+      if (btnSaveDispensing && !btnSaveDispensing.disabled) {
+        btnSaveDispensing.click();
+      }
+    }
+    // F3 a tételhaddadáshoz a modalban
+    else if (e.key === 'F3') {
       e.preventDefault();
-      if (scanModal && scanModal.style.display === 'flex' && !btnAddItem.classList.contains('hidden')) {
+      if (scanModal && scanModal.style.display === 'flex' && btnAddItem && !btnAddItem.classList.contains('hidden')) {
         btnAddItem.click();
       }
     }
@@ -178,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .maybeSingle();
 
           if (error || !med) {
-            alert('A vonalkód nem található a gyógystertörzsben!');
+            alert('A vonalkód nem található a gyógyszertörzsben!');
             return;
           }
 
@@ -313,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!medTableBody) return;
 
     if (currentTrayItems.length === 0) {
-      medTableBody.innerHTML = '<tr class="empty-row"><td colspan="8">Még nincs rögzített gyógyszer ezen a tálcán. Olvassa be a beteg QR kódját, majd nyomja meg a "+ Gyógyszer Hozzáadása" gombot.</td></tr>';
+      medTableBody.innerHTML = '<tr class="empty-row"><td colspan="8">Még nincs rögzített gyógyszer ezen a tálcán. Olvassa be a beteg QR kódját, majd nyomja meg a "+" gombot.</td></tr>';
       return;
     }
 
