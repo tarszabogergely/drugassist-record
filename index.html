@@ -126,20 +126,19 @@
       padding: 0 1.5rem;
     }
 
+    /* FELSŐ FŐ MŰVELETEK (NAGY KÁRTYÁK) */
     .actions-grid-3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1.5rem;
-      margin-bottom: 1.5rem;
     }
 
-    /* KÁRTYA GOMBOK STÍLUSA */
     .btn-action-card {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 2.2rem 1.5rem;
+      padding: 2.5rem 1.5rem;
       background: white;
       border-radius: 16px;
       text-decoration: none;
@@ -156,12 +155,12 @@
     }
 
     .btn-action-card .icon {
-      font-size: 3rem;
+      font-size: 3.2rem;
       margin-bottom: 0.8rem;
     }
 
     .btn-action-card .title {
-      font-size: 1.35rem;
+      font-size: 1.4rem;
       font-weight: 700;
       margin-bottom: 0.3rem;
     }
@@ -171,15 +170,64 @@
       color: #64748b;
     }
 
-    /* Felső 3 gomb színszegélyei */
     .card-gyogyszereles { border-top: 6px solid #3b82f6; }
     .card-ellenorzes { border-top: 6px solid #10b981; }
     .card-archivum { border-top: 6px solid #8b5cf6; }
 
-    /* Alsó 3 gomb színszegélyei */
-    .card-torzs { border-top: 6px solid #f59e0b; }
-    .card-betegek { border-top: 6px solid #ec4899; }
-    .card-felhasznalas { border-top: 6px solid #06b6d4; }
+    /* ALSÓ MÁSODLAGOS BLOKK (KISEBB KÁRTYÁK, LEJJER ELHELYEZVE) */
+    .secondary-section {
+      margin-top: 3.5rem;
+      padding-top: 2rem;
+      border-top: 1px dashed #cbd5e1;
+    }
+
+    .secondary-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    .btn-sub-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.4rem 1rem;
+      background: #f8fafc;
+      border-radius: 12px;
+      text-decoration: none;
+      color: #334155;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      transition: all 0.2s ease;
+      border: 1px solid #e2e8f0;
+      text-align: center;
+    }
+
+    .btn-sub-card:hover {
+      transform: translateY(-3px);
+      background: white;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    .btn-sub-card .icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .btn-sub-card .title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+
+    .btn-sub-card .sub {
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+
+    .card-torzs { border-top: 4px solid #f59e0b; }
+    .card-betegek { border-top: 4px solid #ec4899; }
+    .card-felhasznalas { border-top: 4px solid #06b6d4; }
 
     .hidden {
       display: none !important;
@@ -221,7 +269,7 @@
   <!-- ================= 2. DASHBOARD / KEZELŐFELÜLET NÉZET ================= -->
   <div id="dashboard-container" class="hidden" style="width: 100%;">
     
-    <!-- Fejléc (DrugAssist felirattal, Jobb oldalon Felhasználó + Kijelentkezés) -->
+    <!-- Fejléc -->
     <header class="app-header" style="background: #1e293b; color: white;">
       <div class="logo">
         <h1 style="margin: 0; font-size: 1.8rem; font-weight: 700;">DrugAssist</h1>
@@ -236,7 +284,7 @@
     </header>
 
     <main class="dashboard-container-wide">
-      <!-- FELSŐ 3 NAGY GOMB -->
+      <!-- FELSŐ 3 FŐ GOMB (NAGY MÉRET) -->
       <section class="actions-grid-3">
         <a href="pages/gyogyszereles.html" class="btn-action-card card-gyogyszereles">
           <span class="icon">💊</span>
@@ -257,25 +305,27 @@
         </a>
       </section>
 
-      <!-- ALSÓ 3 MODUL GOMB -->
-      <section class="actions-grid-3">
-        <a href="pages/torzs.html" class="btn-action-card card-torzs">
-          <span class="icon">📦</span>
-          <span class="title">Gyógyszertörzs</span>
-          <span class="sub">Morfológia & vonalkódok</span>
-        </a>
+      <!-- ALSÓ MÁSODLAGOS BLOKK (KÜLÖNVÁLASZTVA, KISEBB KÁRTYÁKKAL) -->
+      <section class="secondary-section">
+        <div class="secondary-grid-3">
+          <a href="pages/torzs.html" class="btn-sub-card card-torzs">
+            <span class="icon">📦</span>
+            <span class="title">Gyógyszertörzs</span>
+            <span class="sub">Morfológia & vonalkódok</span>
+          </a>
 
-        <a href="pages/betegek.html" class="btn-action-card card-betegek">
-          <span class="icon">👤</span>
-          <span class="title">Betegek</span>
-          <span class="sub">Nyilvántartás & előzmények</span>
-        </a>
+          <a href="pages/betegek.html" class="btn-sub-card card-betegek">
+            <span class="icon">👤</span>
+            <span class="title">Betegek</span>
+            <span class="sub">Nyilvántartás & előzmények</span>
+          </a>
 
-        <a href="pages/felhasznalas.html" class="btn-action-card card-felhasznalas">
-          <span class="icon">📊</span>
-          <span class="title">Felhasználás</span>
-          <span class="sub">Statisztikák & kimutatások</span>
-        </a>
+          <a href="pages/felhasznalas.html" class="btn-sub-card card-felhasznalas">
+            <span class="icon">📊</span>
+            <span class="title">Felhasználás</span>
+            <span class="sub">Statisztikák & kimutatások</span>
+          </a>
+        </div>
       </section>
     </main>
   </div>
