@@ -1,27 +1,42 @@
 /**
- * DrugAssist Record - Gyógyszerelés Rögzítés, QR Parser & Patients / Batch Sync
+ * DrugAssist Record - Gyógyszerelési Tálca Rögzítése Modul
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Globális állapotok
-  let currentUser = null;
-  let parsedPatient = null;
-  let currentItems = [];
-  let activeMedication = null;
+  let currentTrayItems = [];
+  let currentPatient = null;
+  let currentScannedMed = null;
+  let batchListForMed = [];
 
   // DOM elemek
   const qrInput = document.getElementById('qr-input');
   const btnParseQr = document.getElementById('btn-parse-qr');
+  const pName = document.getElementById('p-name');
+  const pTaj = document.getElementById('p-taj');
+  const pWardBed = document.getElementById('p-ward-bed');
+  const pTime = document.getElementById('p-time');
+
   const btnOpenScanner = document.getElementById('btn-open-scanner');
+  const medTableBody = document.getElementById('med-table-body');
+  const dispensingNotes = document.getElementById('dispensing-notes');
   const btnSaveDispensing = document.getElementById('btn-save-dispensing');
-  
-  const modal = document.getElementById('scan-modal');
+
+  const scanModal = document.getElementById('scan-modal');
   const btnCloseModal = document.getElementById('btn-close-modal');
   const barcodeInput = document.getElementById('barcode-input');
-  const scannedDetails = document.getElementById('med-scanned-details');
+  const medScannedDetails = document.getElementById('med-scanned-details');
+  const scannedMedName = document.getElementById('scanned-med-name');
+  const scannedMedMorphology = document.getElementById('scanned-med-morphology');
+  
   const lotSelect = document.getElementById('lot-select');
-  const btnToggleNewLot = document.getElementById('btn-toggle-new-lot');
-  const newLotInputs = document.getElementById('new-lot-inputs');
+  const lotBubblesWrapper = document.getElementById('lot-bubbles-wrapper');
+  const newLotNumber = document.getElementById('new-lot-number');
+  const newExpiryDate = document.getElementById('new-expiry-date');
+
+  const doseMorning = document.getElementById('dose-morning');
+  const doseNoon = document.getElementById('dose-noon');
+  const doseEvening = document.getElementById('dose-evening');
+  const doseNight = document.getElementById('dose-night');
   const btnAddItem = document.getElementById('btn-add-item');
 
   // 1. Munkamenet ellenőrzése
@@ -31,314 +46,343 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = '../index.html';
     return;
   }
-  currentUser = JSON.parse(savedUser);
+  const currentUser = JSON.parse(savedUser);
   const userDisp = document.getElementById('user-display');
   if (userDisp) {
     userDisp.innerText = `${currentUser.full_name} (${currentUser.role === 'pharmacist' ? 'Gyógyszerész' : 'Asszisztens'})`;
   }
 
-  // 2. Biztonságos QR Kód Szétbontó (Delimiter: ??)
-  function parseQR(qrString) {
-    if (!qrString || !qrString.includes('??')) return null;
-    const parts = qrString.split('??').map(p => p.trim());
-
-    if (parts.length >= 4) {
-      return {
-        name: parts[0] || 'Ismeretlen beteg',
-        taj: parts.length >= 5 ? parts[1] : null,
-        ward: parts.length >= 5 ? parts[2] : parts[1],
-        bed: parts.length >= 5 ? parts[3] : parts[2],
-        timestamp: parts.length >= 5 ? parts[4] : parts[3],
-        rawQr: qrString
-      };
-    }
-
-    return null;
-  }
-
-  if (btnParseQr) btnParseQr.addEventListener('click', processQrInput);
+  // 2. QR kód beolvasása & feldolgozása
+  if (btnParseQr) btnParseQr.addEventListener('click', parsePatientQr);
   if (qrInput) {
     qrInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') processQrInput();
+      if (e.key === 'Enter') parsePatientQr();
     });
   }
 
-  function processQrInput() {
-    const rawVal = qrInput ? qrInput.value.trim() : '';
-    const result = parseQR(rawVal);
+  function parsePatientQr() {
+    const rawVal = qrInput.value.trim();
+    if (!rawVal) return;
 
-    if (!result) {
-      alert('Érvénytelen QR kód formátum! Használja a "Név??Osztály??Ágyszám??Idő" struktúrát (pl. Kovács István??Általános Sebészet??12/A??20261104084338).');
+    if (!rawVal.includes('??')) {
+      alert('Érvénytelen QR kód formátum!');
       return;
     }
 
-    parsedPatient = result;
+    const parts = rawVal.split('??');
+    currentPatient = {
+      name: parts[0] || 'Névtelen Beteg',
+      ward: parts[1] || 'Ismeretlen Osztály',
+      bed: parts[2] || '-',
+      timestamp: parts[3] || new Date().toISOString(),
+      rawQr: rawVal
+    };
 
-    const elName = document.getElementById('p-name');
-    const elTaj = document.getElementById('p-taj');
-    const elWardBed = document.getElementById('p-ward-bed');
-    const elTime = document.getElementById('p-time');
+    pName.innerText = currentPatient.name;
+    pTaj.innerText = 'Lekérdezés...';
+    pWardBed.innerText = `${currentPatient.ward} / ${currentPatient.bed}`;
+    pTime.innerText = currentPatient.timestamp;
 
-    if (elName) elName.innerText = parsedPatient.name;
-    if (elTaj) elTaj.innerText = parsedPatient.taj || 'Nincs megadva';
-    if (elWardBed) elWardBed.innerText = `${parsedPatient.ward} / ${parsedPatient.bed}`;
-    if (elTime) elTime.innerText = parsedPatient.timestamp;
+    btnOpenScanner.disabled = false;
+    btnSaveDispensing.disabled = false;
 
-    if (btnOpenScanner) btnOpenScanner.disabled = false;
-    if (btnSaveDispensing) btnSaveDispensing.disabled = false;
-    
-    renderTable();
+    // TAJ lekérdezése vagy beteg regisztrációja Supabase-ben
+    fetchOrCreatePatient(currentPatient);
   }
 
-  // 3. Modal & Vonalkód Kezelés
-  if (btnOpenScanner) btnOpenScanner.addEventListener('click', openModal);
-  
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'F2' && btnOpenScanner && !btnOpenScanner.disabled) {
+  async function fetchOrCreatePatient(patientObj) {
+    try {
+      const { data: existingPatient } = await db
+        .from('patients')
+        .select('*')
+        .eq('name', patientObj.name)
+        .maybeSingle();
+
+      if (existingPatient) {
+        pTaj.innerText = existingPatient.taj_number || 'Nincs megadva';
+        currentPatient.taj = existingPatient.taj_number;
+      } else {
+        pTaj.innerText = 'Új betegként rögzítve';
+        await db.from('patients').insert([{
+          name: patientObj.name,
+          ward: patientObj.ward,
+          bed_number: patientObj.bed
+        }]);
+      }
+    } catch (err) {
+      console.error('Beteg lekérdezési hiba:', err);
+    }
+  }
+
+  // 3. Modal Nyitása & Gyorsgombok (F2 & F3)
+  if (btnOpenScanner) {
+    btnOpenScanner.addEventListener('click', openScanModal);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'F2') {
       e.preventDefault();
-      openModal();
+      if (!btnOpenScanner.disabled) openScanModal();
+    } else if (e.key === 'F3') {
+      e.preventDefault();
+      if (scanModal.style.display === 'flex' && !btnAddItem.classList.contains('hidden')) {
+        btnAddItem.click();
+      }
     }
   });
 
-  function openModal() {
-    if (modal) modal.style.display = 'flex';
-    if (barcodeInput) barcodeInput.focus();
-  }
-
-  if (btnCloseModal) btnCloseModal.addEventListener('click', closeModal);
-
-  function closeModal() {
-    if (modal) modal.style.display = 'none';
+  function openScanModal() {
     resetModal();
+    scanModal.style.display = 'flex';
+    barcodeInput.focus();
   }
 
-  // Vonalkód keresése Supabase-ben
-  if (barcodeInput) {
-    barcodeInput.addEventListener('keypress', async (e) => {
-      if (e.key === 'Enter') {
-        const barcode = barcodeInput.value.trim();
-        if (!barcode) return;
+  if (btnCloseModal) {
+    btnCloseModal.addEventListener('click', () => {
+      scanModal.style.display = 'none';
+    });
+  }
 
-        try {
-          const { data: med, error } = await db
-            .from('medication_master')
-            .select('*')
-            .eq('barcode', barcode)
-            .maybeSingle();
+  function resetModal() {
+    barcodeInput.value = '';
+    medScannedDetails.classList.add('hidden');
+    btnAddItem.classList.add('hidden');
+    currentScannedMed = null;
+    batchListForMed = [];
+    newLotNumber.value = '';
+    newExpiryDate.value = '';
+    doseMorning.value = 0;
+    doseNoon.value = 0;
+    doseEvening.value = 0;
+    doseNight.value = 0;
+    lotBubblesWrapper.innerHTML = '<span style="color: #94a3b8; font-style: italic; font-size: 0.88rem;">Nincs rögzített korábbi LOT.</span>';
+  }
 
-          if (error || !med) {
-            alert('A gyógyszer nem található a gyógyszertörzsben!');
-            return;
-          }
+  // 4. Gyógyszer vonalkódolvasása
+  barcodeInput.addEventListener('keypress', async (e) => {
+    if (e.key === 'Enter') {
+      const code = barcodeInput.value.trim();
+      if (!code) return;
 
-          activeMedication = med;
-          document.getElementById('scanned-med-name').innerText = med.name;
-          document.getElementById('scanned-med-morphology').innerText = med.morphology || 'Nincs leírás.';
+      try {
+        const { data: med, error } = await db
+          .from('medication_master')
+          .select('*')
+          .eq('barcode', code)
+          .maybeSingle();
 
-          // Korábbi LOT számok betöltése
-          const { data: batches } = await db
-            .from('batch_records')
-            .select('*')
-            .eq('medication_id', med.id)
-            .order('expiry_date', { ascending: true });
-
-          lotSelect.innerHTML = '<option value="">-- Válassz korábbi LOT-ot --</option>';
-          if (batches && batches.length > 0) {
-            batches.forEach(b => {
-              lotSelect.innerHTML += `<option value="${b.id}">${b.lot_number} (Lejárat: ${b.expiry_date})</option>`;
-            });
-          }
-
-          if (scannedDetails) scannedDetails.classList.remove('hidden');
-          if (btnAddItem) btnAddItem.classList.remove('hidden');
-        } catch (err) {
-          console.error('Keresési hiba:', err);
-          alert('Hiba történt a gyógyszer keresésekor.');
+        if (error || !med) {
+          alert('A vonalkód nem található a gyógyszertörzsben!');
+          return;
         }
+
+        currentScannedMed = med;
+        scannedMedName.innerText = med.name;
+        scannedMedMorphology.innerText = med.morphology || 'Nincs leírás megadva';
+
+        // LOT rekordok lekérdezése
+        const { data: batches } = await db
+          .from('batch_records')
+          .select('*')
+          .eq('medication_id', med.id)
+          .order('expiry_date', { ascending: true });
+
+        batchListForMed = batches || [];
+        renderLotBubbles(batchListForMed);
+
+        medScannedDetails.classList.remove('hidden');
+        btnAddItem.classList.remove('hidden');
+        newLotNumber.focus();
+      } catch (err) {
+        console.error('Gyógyszerkeresési hiba:', err);
       }
-    });
-  }
+    }
+  });
 
-  if (btnToggleNewLot) {
-    btnToggleNewLot.addEventListener('click', () => {
-      if (newLotInputs) newLotInputs.classList.toggle('hidden');
-    });
-  }
+  // LOT BUBORÉKOK RENDERELÉSE
+  function renderLotBubbles(batches) {
+    lotSelect.innerHTML = '<option value="">-- Új LOT felvétele --</option>';
 
-  // Tétel Hozzáadása a Tálcához
-  if (btnAddItem) {
-    btnAddItem.addEventListener('click', async () => {
-      if (!activeMedication) return;
-
-      let selectedBatchId = lotSelect.value || null;
-      let lotText = 'Nincs megadva';
-      let newLotNumberToInsert = document.getElementById('new-lot-number').value.trim();
-      let newExpiryDateToInsert = document.getElementById('new-expiry-date').value;
-
-      if (selectedBatchId && lotSelect.selectedIndex > 0) {
-        lotText = lotSelect.options[lotSelect.selectedIndex].text;
-      }
-
-      if (newLotNumberToInsert && newExpiryDateToInsert) {
-        try {
-          const { data: insertedBatch } = await db
-            .from('batch_records')
-            .insert([{
-              medication_id: activeMedication.id,
-              lot_number: newLotNumberToInsert,
-              expiry_date: newExpiryDateToInsert
-            }])
-            .select()
-            .single();
-
-          if (insertedBatch) {
-            selectedBatchId = insertedBatch.id;
-            lotText = `${insertedBatch.lot_number} (Lejárat: ${insertedBatch.expiry_date})`;
-          } else {
-            lotText = `${newLotNumberToInsert} (Lejárat: ${newExpiryDateToInsert})`;
-          }
-        } catch (err) {
-          console.error('Batch mentési hiba:', err);
-          lotText = `${newLotNumberToInsert} (Lejárat: ${newExpiryDateToInsert})`;
-        }
-      }
-
-      const item = {
-        medication_id: activeMedication.id,
-        medication_name: activeMedication.name,
-        morphology: activeMedication.morphology,
-        batch_id: selectedBatchId,
-        lot_text: lotText,
-        morning: parseFloat(document.getElementById('dose-morning').value) || 0,
-        noon: parseFloat(document.getElementById('dose-noon').value) || 0,
-        evening: parseFloat(document.getElementById('dose-evening').value) || 0,
-        night: parseFloat(document.getElementById('dose-night').value) || 0
-      };
-
-      currentItems.push(item);
-      renderTable();
-      closeModal();
-    });
-  }
-
-  function renderTable() {
-    const tbody = document.getElementById('med-table-body');
-    if (!tbody) return;
-
-    if (currentItems.length === 0) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Még nincs rögzített gyógyszer ezen a tálcán.</td></tr>';
+    if (!batches || batches.length === 0) {
+      lotBubblesWrapper.innerHTML = '<span style="color: #94a3b8; font-style: italic; font-size: 0.88rem;">Nincs rögzített korábbi LOT (töltsd ki az alsó mezőket).</span>';
       return;
     }
 
-    tbody.innerHTML = currentItems.map((item, idx) => `
-      <tr>
-        <td><strong>${item.medication_name}</strong></td>
-        <td>${item.morphology || '-'}</td>
-        <td><strong>${item.lot_text}</strong></td>
-        <td>${item.morning}</td>
-        <td>${item.noon}</td>
-        <td>${item.evening}</td>
-        <td>${item.night}</td>
-        <td><button type="button" onclick="removeItem(${idx})" class="btn-link" style="color:red;">Törlés</button></td>
-      </tr>
-    `).join('');
-  }
+    lotBubblesWrapper.innerHTML = batches.map(b => {
+      lotSelect.innerHTML += `<option value="${b.id}">${b.lot_number} (${b.expiry_date})</option>`;
+      return `<div class="lot-bubble" data-batch-id="${b.id}">${b.lot_number} <span style="font-size:0.75rem; opacity:0.8;">(${b.expiry_date})</span></div>`;
+    }).join('');
 
-  window.removeItem = function(idx) {
-    currentItems.splice(idx, 1);
-    renderTable();
-  };
+    // Buborék kattintás esemény
+    document.querySelectorAll('.lot-bubble').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const selectedId = btn.getAttribute('data-batch-id');
+        const isSelected = btn.classList.contains('selected');
 
-  function resetModal() {
-    if (barcodeInput) barcodeInput.value = '';
-    if (scannedDetails) scannedDetails.classList.add('hidden');
-    if (btnAddItem) btnAddItem.classList.add('hidden');
-    if (newLotInputs) newLotInputs.classList.add('hidden');
-    document.getElementById('new-lot-number').value = '';
-    document.getElementById('new-expiry-date').value = '';
-    document.getElementById('dose-morning').value = '0';
-    document.getElementById('dose-noon').value = '0';
-    document.getElementById('dose-evening').value = '0';
-    document.getElementById('dose-night').value = '0';
-    activeMedication = null;
-  }
+        document.querySelectorAll('.lot-bubble').forEach(b => b.classList.remove('selected'));
 
-  // 4. Teljes Tálca & Beteg Törzs Mentése Supabase-be
-  if (btnSaveDispensing) {
-    btnSaveDispensing.addEventListener('click', async () => {
-      if (!parsedPatient) {
-        alert('Nincs beolvasott beteg QR kód!');
-        return;
-      }
-      if (currentItems.length === 0) {
-        alert('Legalább egy gyógyszert rögzíteni kell a lezáráshoz!');
-        return;
-      }
-
-      btnSaveDispensing.disabled = true;
-      btnSaveDispensing.innerText = 'Mentés folyamatban...';
-
-      try {
-        let patientId = null;
-        try {
-          const { data: patientRecord } = await db
-            .from('patients')
-            .insert([{
-              name: parsedPatient.name,
-              taj_number: parsedPatient.taj,
-              ward: parsedPatient.ward,
-              bed_number: parsedPatient.bed
-            }])
-            .select()
-            .single();
-
-          if (patientRecord) patientId = patientRecord.id;
-        } catch (pErr) {
-          console.warn('Patient beszúrási megjegyzés:', pErr);
+        if (!isSelected) {
+          btn.classList.add('selected');
+          lotSelect.value = selectedId;
+          const selectedBatch = batchListForMed.find(b => b.id === selectedId);
+          if (selectedBatch) {
+            newLotNumber.value = selectedBatch.lot_number;
+            newExpiryDate.value = selectedBatch.expiry_date;
+          }
+        } else {
+          lotSelect.value = '';
+          newLotNumber.value = '';
+          newExpiryDate.value = '';
         }
+      });
+    });
+  }
 
-        const { data: record, error: recError } = await db
-          .from('dispensing_records')
+  // 5. Gyógyszer Hozzáadása a Tálcához (AddItem)
+  btnAddItem.addEventListener('click', async () => {
+    if (!currentScannedMed) return;
+
+    const lotNum = newLotNumber.value.trim();
+    const expDate = newExpiryDate.value;
+
+    if (!lotNum || !expDate) {
+      alert('Kérjük, adja meg a Gyári számot (LOT) és a lejárati dátumot!');
+      return;
+    }
+
+    const mDose = parseFloat(doseMorning.value) || 0;
+    const nDose = parseFloat(doseNoon.value) || 0;
+    const eDose = parseFloat(doseEvening.value) || 0;
+    const niDose = parseFloat(doseNight.value) || 0;
+
+    if (mDose + nDose + eDose + niDose === 0) {
+      alert('Legalább egy napszakhoz adjon meg adagolási mennyiséget!');
+      return;
+    }
+
+    let batchId = lotSelect.value;
+
+    try {
+      if (!batchId) {
+        const { data: newBatch, error: bErr } = await db
+          .from('batch_records')
           .insert([{
-            qr_identifier: parsedPatient.rawQr,
-            patient_id: patientId,
-            patient_name: parsedPatient.name,
-            patient_taj: parsedPatient.taj,
-            ward: parsedPatient.ward,
-            bed_number: parsedPatient.bed,
-            status: 'draft',
-            notes: document.getElementById('dispensing-notes').value.trim()
+            medication_id: currentScannedMed.id,
+            lot_number: lotNum,
+            expiry_date: expDate
           }])
           .select()
           .single();
 
-        if (recError) throw recError;
-
-        const itemsToInsert = currentItems.map(it => ({
-          dispensing_record_id: record.id,
-          medication_id: it.medication_id,
-          batch_id: it.batch_id,
-          morning_dose: it.morning,
-          noon_dose: it.noon,
-          evening_dose: it.evening,
-          night_dose: it.night
-        }));
-
-        const { error: itemsError } = await db
-          .from('dispensed_items')
-          .insert(itemsToInsert);
-
-        if (itemsError) throw itemsError;
-
-        alert('Tálca és betegadatok sikeresen elmentve!');
-        window.location.href = '../index.html';
-      } catch (err) {
-        console.error('Mentési hiba:', err);
-        alert('Hiba történt a tálca mentése során: ' + err.message);
-      } finally {
-        btnSaveDispensing.disabled = false;
-        btnSaveDispensing.innerText = 'Tálca Lezárása és Mentése Supabase-be';
+        if (bErr) throw bErr;
+        batchId = newBatch.id;
       }
-    });
+
+      currentTrayItems.push({
+        medication_id: currentScannedMed.id,
+        medication_name: currentScannedMed.name,
+        morphology: currentScannedMed.morphology,
+        batch_id: batchId,
+        lot_number: lotNum,
+        expiry_date: expDate,
+        morning: mDose,
+        noon: nDose,
+        evening: eDose,
+        night: niDose
+      });
+
+      renderTrayTable();
+      scanModal.style.display = 'none';
+    } catch (err) {
+      console.error('Tétel hozzáadási hiba:', err);
+      alert('Hiba történt a tétel rögzítésekor!');
+    }
+  });
+
+  // Tálca táblázat renderelése
+  function renderTrayTable() {
+    if (currentTrayItems.length === 0) {
+      medTableBody.innerHTML = '<tr class="empty-row"><td colspan="8">Még nincs rögzített gyógyszer ezen a tálcán. Olvassa be a beteg QR kódját, majd nyomja meg a "+ Gyógyszer Hozzáadása" gombot.</td></tr>';
+      return;
+    }
+
+    medTableBody.innerHTML = currentTrayItems.map((item, index) => `
+      <tr>
+        <td><strong>${item.medication_name}</strong></td>
+        <td>${item.morphology || '-'}</td>
+        <td><code>${item.lot_number}</code> <br><small style="color:#666;">Exp: ${item.expiry_date}</small></td>
+        <td>${item.morning}</td>
+        <td>${item.noon}</td>
+        <td>${item.evening}</td>
+        <td>${item.night}</td>
+        <td>
+          <button type="button" onclick="removeTrayItem(${index})" class="btn btn-secondary btn-sm" style="background:#dc2626; color:white; border:none;">Törlés</button>
+        </td>
+      </tr>
+    `).join('');
   }
+
+  window.removeTrayItem = function(index) {
+    currentTrayItems.splice(index, 1);
+    renderTrayTable();
+  };
+
+  // 6. Tálca Lezárása & Mentése
+  btnSaveDispensing.addEventListener('click', async () => {
+    if (!currentPatient) {
+      alert('Hiányzó beteg adatok!');
+      return;
+    }
+
+    if (currentTrayItems.length === 0) {
+      alert('A tálcára még nem vett fel gyógyszert!');
+      return;
+    }
+
+    btnSaveDispensing.disabled = true;
+    btnSaveDispensing.innerText = 'Mentés folyamatban...';
+
+    try {
+      // 1. Tálca fejlécrekord beszúrása
+      const { data: record, error: recErr } = await db
+        .from('dispensing_records')
+        .insert([{
+          patient_name: currentPatient.name,
+          patient_taj: currentPatient.taj || null,
+          ward: currentPatient.ward,
+          bed_number: currentPatient.bed,
+          qr_identifier: currentPatient.rawQr,
+          dispensed_by: currentUser.username,
+          status: 'draft',
+          notes: dispensingNotes.value.trim()
+        }])
+        .select()
+        .single();
+
+      if (recErr) throw recErr;
+
+      // 2. Tételek beszúrása
+      const itemsToInsert = currentTrayItems.map(it => ({
+        dispensing_record_id: record.id,
+        medication_id: it.medication_id,
+        batch_id: it.batch_id,
+        morning_dose: it.morning,
+        noon_dose: it.noon,
+        evening_dose: it.evening,
+        night_dose: it.night
+      }));
+
+      const { error: itemsErr } = await db.from('dispensed_items').insert(itemsToInsert);
+      if (itemsErr) throw itemsErr;
+
+      alert('Tálca sikeresen lezárva és elmentve!');
+      window.location.reload();
+    } catch (err) {
+      console.error('Mentési hiba:', err);
+      alert('Hiba történt a tálca mentése során!');
+    } finally {
+      btnSaveDispensing.disabled = false;
+      btnSaveDispensing.innerText = '✓ Tálca Lezárása és Mentése Supabase-be';
+    }
+  });
 });
