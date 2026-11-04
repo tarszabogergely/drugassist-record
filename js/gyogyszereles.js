@@ -116,26 +116,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 3. Modal Nyitása, Esc Bezárás & Ctrl+Enter Lezárás Gyorsgombok
+  // 3. Modal Nyitása, Esc Bezárás, Ctrl+Enter Lezárás & "+" Gyorsgomb
   if (btnOpenScanner) {
     btnOpenScanner.addEventListener('click', openScanModal);
   }
 
   document.addEventListener('keydown', (e) => {
-    // 4. MODALBÓL KILÉPÉS ESC-EL
+    // MODALBÓL KILÉPÉS ESC-EL
     if (e.key === 'Escape') {
       if (scanModal && scanModal.style.display === 'flex') {
         scanModal.style.display = 'none';
       }
     } 
-    // 3. LEZÁRÁS GYORSGOMB: CTRL + ENTER
+    // LEZÁRÁS GYORSGOMB: CTRL + ENTER
     else if (e.ctrlKey && e.key === 'Enter') {
       e.preventDefault();
       if (btnSaveDispensing && !btnSaveDispensing.disabled) {
         btnSaveDispensing.click();
       }
     }
-    // F3 a tételhaddadáshoz a modalban
+    // "+" GYORSGOMB: GYÓGYSZER HOZZÁADÁSA MODAL NYITÁSA (+ vagy Numpad +)
+    // Szövegbeviteli mezőkben gépeléskor nem váltja ki
+    else if ((e.key === '+' || e.code === 'NumpadAdd') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      if (btnOpenScanner && !btnOpenScanner.disabled) {
+        openScanModal();
+      }
+    }
+    // F3 GYORSGOMB: TÉTEL HOZZÁADÁSA A TÁLCÁHOZ A MODALBAN
     else if (e.key === 'F3') {
       e.preventDefault();
       if (scanModal && scanModal.style.display === 'flex' && btnAddItem && !btnAddItem.classList.contains('hidden')) {
