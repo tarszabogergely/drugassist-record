@@ -174,12 +174,6 @@
     .card-ellenorzes { border-top: 6px solid #10b981; }
     .card-archivum { border-top: 6px solid #8b5cf6; }
 
-    .nav-tiles-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1.25rem;
-    }
-
     .hidden {
       display: none !important;
     }
@@ -188,7 +182,7 @@
 
 <body class="login-body">
 
-  <!-- ================= 1. ÚJ BEJELENTKEZŐ FELÜLET ================= -->
+  <!-- ================= 1. BEJELENTKEZŐ FELÜLET ================= -->
   <div id="login-container" class="login-container">
     <div class="login-left">
       <img src="drugassistlogo.png" alt="DrugAssist Logo" onerror="this.src='https://drugassistlogo.netlify.app/drugassistlogo.png'">
@@ -256,38 +250,35 @@
         </a>
       </section>
 
-      <!-- További Modulok -->
+      <hr class="divider">
+
+      <!-- További Modulok (Eredeti Másodlagos Funkciók Stílusával) -->
       <section class="card">
         <h2 style="margin-top:0; margin-bottom: 1.2rem; color: #334155;">További Modulok</h2>
-        <div class="nav-tiles-grid">
-          <a href="pages/torzs.html" class="tile-btn">
-            <span class="tile-icon">📦</span>
-            <span class="tile-title">Gyógyszertörzs</span>
-            <span class="tile-desc">Morfológia & vonalkódok</span>
+        <div class="secondary-actions">
+          <a href="pages/torzs.html" class="btn-action btn-sub">
+            <span class="icon">📦</span>
+            <span>Gyógyszertörzs</span>
           </a>
-
-          <a href="pages/betegek.html" class="tile-btn">
-            <span class="tile-icon">👥</span>
-            <span class="tile-title">Betegek</span>
-            <span class="tile-desc">Nyilvántartás & előzmények</span>
+          <a href="pages/betegek.html" class="btn-action btn-sub">
+            <span class="icon">👤</span>
+            <span>Betegek</span>
           </a>
-
-          <a href="pages/felhasznalas.html" class="tile-btn">
-            <span class="tile-icon">📊</span>
-            <span class="tile-title">Felhasználás</span>
-            <span class="tile-desc">Statisztikák & kimutatások</span>
+          <a href="pages/felhasznalas.html" class="btn-action btn-sub">
+            <span class="icon">📊</span>
+            <span>Felhasználás</span>
           </a>
         </div>
       </section>
     </main>
   </div>
 
-  <!-- Eredeti Javascript betöltési sorrend (Változatlanul) -->
+  <!-- Javascript betöltése (Szigorú sorrendben!) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/auth.js"></script>
 
-  <!-- Kiskapu a háttér stílusának váltásához a bejelentkezés állapotától függően -->
+  <!-- Háttér stílusának kezelése bejelentkezési állapottól függően -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const observer = new MutationObserver(() => {
