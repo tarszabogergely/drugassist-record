@@ -9,7 +9,7 @@
   
   <!-- Supabase SDK & Config -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-config.js"></script>
+  <script src="js/config.js"></script>
 
   <style>
     /* Bejelentkező Képernyő Stílusai */
@@ -123,7 +123,7 @@
       text-align: center;
     }
 
-    /* Szélesített Dashboard Elrendezés (3 gomb egymás mellett) */
+    /* Szélesített Dashboard Elrendezés */
     .dashboard-container {
       max-width: 1200px;
       margin: 2rem auto;
@@ -174,7 +174,6 @@
       color: #64748b;
     }
 
-    /* Külön színszegélyek a 3 gombnak */
     .card-gyogyszereles { border-top: 6px solid #3b82f6; }
     .card-ellenorzes { border-top: 6px solid #10b981; }
     .card-archivum { border-top: 6px solid #8b5cf6; }
@@ -221,7 +220,6 @@
   <!-- ================= 2. DASHBOARD / KEZELŐFELÜLET NÉZET ================= -->
   <div id="dashboard-section" style="display: none; width: 100%;">
     
-    <!-- Fejléc (Jobb oldalon Felhasználó + Kijelentkezés) -->
     <header class="app-header" style="background: #1e293b; color: white;">
       <div class="logo">
         <h1 style="margin: 0; font-size: 1.8rem; font-weight: 700;">DrugAssist</h1>
@@ -236,8 +234,6 @@
     </header>
 
     <main class="dashboard-container">
-      
-      <!-- 3 NAGY GOMB EGYMÁS MELLETT -->
       <section class="actions-grid-3">
         <a href="pages/gyogyszereles.html" class="btn-action-card card-gyogyszereles">
           <span class="icon">💊</span>
@@ -258,7 +254,6 @@
         </a>
       </section>
 
-      <!-- További Modulok / Törzsadatok -->
       <section class="card">
         <h2 style="margin-top:0; margin-bottom: 1.2rem; color: #334155;">További Modulok</h2>
         <div class="nav-tiles-grid">
@@ -284,7 +279,6 @@
     </main>
   </div>
 
-  <!-- JavaScript Logika -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const loginSection = document.getElementById('login-section');
@@ -297,14 +291,16 @@
       const btnLogout = document.getElementById('btn-logout');
       const userDisplay = document.getElementById('user-display');
 
-      // 1. Állapot ellenőrzése
+      // Meglévő Supabase adatbázis-kliens azonosítása (db vagy supabase)
+      const supabaseDb = window.db || window.supabase;
+
       checkSession();
 
       function checkSession() {
         const savedUser = sessionStorage.getItem('drugassist_user');
         if (savedUser) {
           const user = JSON.parse(savedUser);
-          document.body.className = ''; // Háttér átállítása a sima oldalra
+          document.body.className = '';
           loginSection.style.display = 'none';
           dashboardSection.style.display = 'block';
           userDisplay.innerText = `${user.full_name} (${user.role === 'pharmacist' ? 'Gyógyszerész' : 'Asszisztens'})`;
@@ -315,7 +311,6 @@
         }
       }
 
-      // 2. Bejelentkezés események
       loginButton.addEventListener('click', handleLogin);
       passwordInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleLogin();
@@ -338,8 +333,12 @@
         loginError.innerText = '';
 
         try {
-          // Supabase profiles tábla lekérdezése
-          const { data: user, error } = await db
+          if (!supabaseDb) {
+            loginError.innerText = 'Adatbázis kapcsolódási hiba (config nem található).';
+            return;
+          }
+
+          const { data: user, error } = await supabaseDb
             .from('profiles')
             .select('*')
             .eq('username', username)
@@ -351,7 +350,6 @@
             return;
           }
 
-          // Sikeres bejelentkezés -> Munkamenet elmentése
           sessionStorage.setItem('drugassist_user', JSON.stringify({
             id: user.id,
             username: user.username,
@@ -362,14 +360,13 @@
           checkSession();
         } catch (err) {
           console.error('Bejelentkezési hiba:', err);
-          loginError.innerText = 'Hálózati vagy adatbázis hiba történt.';
+          loginError.innerText = 'Hálózati hiba történt a bejelentkezés során.';
         } finally {
           loginButton.disabled = false;
           loginButton.innerText = 'Bejelentkezés';
         }
       }
 
-      // 3. Kijelentkezés
       if (btnLogout) {
         btnLogout.addEventListener('click', () => {
           sessionStorage.removeItem('drugassist_user');
