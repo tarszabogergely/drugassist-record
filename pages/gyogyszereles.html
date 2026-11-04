@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DrugAssist Record - Gyógyszerelés</title>
+  <title>DrugAssist Record - Gyógyszerelés Rögzítés</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -11,53 +11,52 @@
   <!-- Fejléc -->
   <header class="app-header">
     <div class="logo">
-      <a href="../index.html" class="back-link">← Főmenü</a>
-      <span class="badge">ASSZISZTENS</span>
-      <h1>Gyógyszerelés Rögzítése</h1>
+      <h1>Gyógyszerelési Tálca Rögzítése</h1>
     </div>
-    <div class="user-info">
+    <div class="user-info" style="display: flex; align-items: center; gap: 1rem;">
+      <a href="../index.html" class="back-link" style="color: white; text-decoration: none; font-weight: bold; background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 4px;">🏠 Főmenü</a>
       <span id="user-display">--</span>
     </div>
   </header>
 
   <main class="container">
-    <!-- 1. Kártya: Tálca Azonosítás (QR Kód Parser) -->
-    <section class="card patient-card">
-      <h2>1. Tálca Azonosítás (QR Kód)</h2>
-      <p class="help-text">Olvasd be a tálcán lévő QR kódot (Pl.: Kovács István??Általános Sebészet??12/A??20261104084338)</p>
-      
+    <!-- 1. Kártya: Beteg QR Beolvasása -->
+    <section class="card">
+      <h2>1. Beteg QR Kód Beolvasása</h2>
       <div class="patient-grid">
         <div class="form-group">
-          <label for="qr-input">Tálca QR Kód</label>
+          <label for="qr-input">Beteg QR Kód (Név??Osztály??Ágyszám??Idő)</label>
           <div class="input-with-button">
-            <input type="text" id="qr-input" placeholder="Beolvasás vagy beillesztés..." autofocus>
+            <input type="text" id="qr-input" placeholder="Olvassa be a beteg QR kódját..." autofocus>
             <button type="button" id="btn-parse-qr" class="btn btn-primary">Betöltés</button>
           </div>
         </div>
 
-        <div class="patient-details-box">
-          <div><strong>Beteg neve:</strong> <span id="p-name" class="highlight-text">-</span></div>
+        <div class="patient-details-box" id="patient-details-box">
+          <div><strong>Beteg Neve:</strong> <span id="p-name" class="highlight-text">Nincs rögzítve</span></div>
           <div><strong>TAJ szám:</strong> <span id="p-taj">-</span></div>
           <div><strong>Osztály / Ágy:</strong> <span id="p-ward-bed">-</span></div>
-          <div><strong>Azonosító idő:</strong> <span id="p-time">-</span></div>
+          <div><strong>Rögzítés Időpontja:</strong> <span id="p-time">-</span></div>
         </div>
       </div>
     </section>
 
-    <!-- 2. Kártya: Rögzített Gyógyszerek Táblázata -->
+    <!-- 2. Kártya: Tálca Gyógyszerelési Mátrixa -->
     <section class="card">
       <div class="table-header">
-        <h2>2. Gyógyszerelési Tételek</h2>
-        <button type="button" id="btn-open-scanner" class="btn btn-success" disabled>+ Gyógyszer Beolvasása (F2)</button>
+        <h2>2. Tálca Tartalma (Gyógyszerek)</h2>
+        <button type="button" id="btn-open-scanner" class="btn btn-success" disabled style="background: #10b981; border-color: #059669;">
+          + Gyógyszer Hozzáadása (F2)
+        </button>
       </div>
 
       <div class="table-wrapper">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Gyógyszernév</th>
-              <th>Morfológia</th>
-              <th>LOT / Lejárat</th>
+              <th>Gyógyszer Neve</th>
+              <th>Morfológia (Alak, Szín)</th>
+              <th>Gyári szám (LOT) / Lejárat</th>
               <th>Reggel</th>
               <th>Délben</th>
               <th>Este</th>
@@ -67,96 +66,97 @@
           </thead>
           <tbody id="med-table-body">
             <tr class="empty-row">
-              <td colspan="8">Kérjük, először olvassa be a tálca QR kódját!</td>
+              <td colspan="8">Még nincs rögzített gyógyszer ezen a tálcán. Olvassa be a beteg QR kódját, majd nyomja meg a "+ Gyógyszer Hozzáadása" gombot.</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Megjegyzés és Mentés -->
+      <!-- Megjegyzés és Lezárás -->
       <div class="summary-section">
         <div class="form-group">
-          <label for="dispensing-notes">Megjegyzés a gyógyszereléshez</label>
-          <textarea id="dispensing-notes" rows="2" placeholder="Pl.: Beteg kérésére az esti adag csúsztatva, felezett tabletta..."></textarea>
+          <label for="dispensing-notes">Asszisztensi Megjegyzés / Eltérés indoklása</label>
+          <textarea id="dispensing-notes" rows="2" placeholder="Opcionális megjegyzés a tálcához (pl. szilárd adagolási forma felezve)..."></textarea>
         </div>
-        <button type="button" id="btn-save-dispensing" class="btn btn-large btn-primary" disabled>Tálca Lezárása és Mentése Supabase-be</button>
+
+        <button type="button" id="btn-save-dispensing" class="btn btn-large btn-primary" disabled>
+          Tálca Lezárása és Mentése Supabase-be
+        </button>
       </div>
     </section>
   </main>
 
-  <!-- Modal: Gyógyszer Beolvasás & LOT Választó -->
+  <!-- Modal: Gyógyszer Beolvasása & Adagolás -->
   <div id="scan-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Gyógyszer Beolvasása & Adagolás</h3>
+        <h3>Gyógyszer Beolvasása (Vonalkód / EAN)</h3>
         <span class="close-modal" id="btn-close-modal">&times;</span>
       </div>
+
       <div class="modal-body">
         <div class="form-group">
-          <label for="barcode-input">Doboz Vonalkód (EAN / GTIN)</label>
-          <input type="text" id="barcode-input" placeholder="Beolvasás vonalkódolvasóval...">
+          <label for="barcode-input">Gyógyszer Vonalkódja</label>
+          <input type="text" id="barcode-input" placeholder="Olvassa be a gyógyszer vonalkódját...">
         </div>
 
-        <!-- Beolvasott Gyógyszer Részletei -->
-        <div id="med-scanned-details" class="scanned-details hidden">
-          <div class="med-title" id="scanned-med-name">--</div>
-          
-          <div class="morphology-box">
-            <strong>Morfológiai ellenőrzés:</strong>
-            <p id="scanned-med-morphology">--</p>
+        <!-- Részletek a beolvasás után -->
+        <div id="med-scanned-details" class="hidden">
+          <div class="med-info-card">
+            <h4 id="scanned-med-name">--</h4>
+            <p><strong>Morfológiai leírás:</strong> <span id="scanned-med-morphology">--</span></p>
           </div>
 
-          <!-- LOT & Lejárat Választó -->
+          <!-- LOT választó és új rögzítése -->
           <div class="form-group">
-            <label for="lot-select">Gyári szám (LOT) & Lejárat</label>
+            <label for="lot-select">Gyári szám (LOT) & Lejárat kiválasztása</label>
             <select id="lot-select">
               <option value="">-- Válassz korábbi LOT-ot --</option>
             </select>
             <button type="button" id="btn-toggle-new-lot" class="btn-link">+ Új LOT / Lejárat megadása</button>
           </div>
 
-          <!-- Új LOT Mezők -->
-          <div id="new-lot-inputs" class="new-lot-inputs hidden">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="new-lot-number">Új LOT szám</label>
-                <input type="text" id="new-lot-number" placeholder="Pl.: AB12345">
-              </div>
-              <div class="form-group">
-                <label for="new-expiry-date">Lejárati idő</label>
-                <input type="date" id="new-expiry-date">
-              </div>
+          <div id="new-lot-inputs" class="hidden new-lot-box">
+            <div class="form-group">
+              <label for="new-lot-number">Új Gyári Szám (LOT)</label>
+              <input type="text" id="new-lot-number" placeholder="Pl.: AB123456">
+            </div>
+            <div class="form-group">
+              <label for="new-expiry-date">Lejárati Dátum</label>
+              <input type="date" id="new-expiry-date">
             </div>
           </div>
 
-          <!-- Adagolási Mátrix -->
-          <div class="dosage-grid">
+          <!-- Adagolási Mátrix (Napszakok) -->
+          <label>Adagolás (Egység / Napszak)</label>
+          <div class="dose-grid">
             <div class="dose-item">
-              <label>Reggel</label>
-              <input type="number" id="dose-morning" step="0.5" min="0" value="0">
+              <span>Reggel</span>
+              <input type="number" id="dose-morning" value="0" step="0.5" min="0">
             </div>
             <div class="dose-item">
-              <label>Délben</label>
-              <input type="number" id="dose-noon" step="0.5" min="0" value="0">
+              <span>Délben</span>
+              <input type="number" id="dose-noon" value="0" step="0.5" min="0">
             </div>
             <div class="dose-item">
-              <label>Este</label>
-              <input type="number" id="dose-evening" step="0.5" min="0" value="0">
+              <span>Este</span>
+              <input type="number" id="dose-evening" value="0" step="0.5" min="0">
             </div>
             <div class="dose-item">
-              <label>Éjjel</label>
-              <input type="number" id="dose-night" step="0.5" min="0" value="0">
+              <span>Éjjel</span>
+              <input type="number" id="dose-night" value="0" step="0.5" min="0">
             </div>
           </div>
         </div>
       </div>
+
       <div class="modal-footer">
-        <button type="button" id="btn-add-item" class="btn btn-success hidden">Hozzáadás a Tálcához (Enter)</button>
+        <button type="button" id="btn-add-item" class="btn btn-primary hidden">Hozzáadás a tálcához</button>
       </div>
     </div>
   </div>
 
-  <!-- JavaScript modulok betöltése -->
+  <!-- JavaScript modulok -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/supabase-config.js"></script>
   <script src="../js/gyogyszereles.js"></script>
