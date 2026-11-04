@@ -107,7 +107,7 @@
   <main class="container">
     <!-- 1. Kártya: Beteg QR Beolvasása -->
     <section class="card">
-      <h2>1. Beteg QR Kód Beolvasása</h2>
+      <h2>Beteg azonosítás</h2>
       <div class="patient-grid">
         <div class="form-group">
           <label for="qr-input">Beteg QR Kód (Név??Osztály??Ágyszám??Idő)</label>
@@ -129,7 +129,7 @@
     <!-- 2. Kártya: Tálca Gyógyszerelési Mátrixa -->
     <section class="card">
       <div class="table-header">
-        <h2>2. Tálca Tartalma (Gyógyszerek)</h2>
+        <h2>Gyógyszerek</h2>
         <button type="button" id="btn-open-scanner" class="btn btn-success" disabled style="background: #10b981; border-color: #059669;">
           + Gyógyszer Hozzáadása (F2)
         </button>
@@ -160,7 +160,7 @@
 
     <!-- 3. Kártya: Megjegyzés és Lezárás (3. RÉS A MEGJEGYZÉS ÉS A GOMB KÖZÖTT) -->
     <section class="card" style="margin-top: 1.5rem; background: #f8fafc; border-top: 4px solid #3b82f6;">
-      <h2 style="margin-top:0; color: #1e293b;">3. Asszisztensi Megjegyzés & Tálca Lezárása</h2>
+      <h2 style="margin-top:0; color: #1e293b;">Megjegyzés</h2>
       <div class="summary-section" style="padding-top: 0.5rem;">
         <div class="form-group" style="margin-bottom: 1.75rem;">
           <label for="dispensing-notes" style="font-weight: 600; color: #475569;">Asszisztensi Megjegyzés / Eltérés indoklása</label>
@@ -168,7 +168,7 @@
         </div>
 
         <button type="button" id="btn-save-dispensing" class="btn btn-large btn-primary" disabled style="width: 100%; padding: 1rem; font-size: 1.1rem; border-radius: 8px; margin-top: 0.5rem;">
-          ✓ Tálca Lezárása és Mentése Supabase-be
+          ✓ Lezárás
         </button>
       </div>
     </section>
