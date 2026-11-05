@@ -11,7 +11,7 @@
   <!-- Fejléc -->
   <header class="app-header">
     <div class="logo">
-      <h1>Gyógyszertörzs Kezelése</h1>
+      <h1>Gyógyszertörzs</h1>
     </div>
     <div class="user-info" style="display: flex; align-items: center; gap: 1rem;">
       <a href="../index.html" class="back-link" style="color: white; text-decoration: none; font-weight: bold; background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 4px;">🏠 Főmenü</a>
@@ -22,15 +22,13 @@
   <main class="container">
     <!-- Keresés és Új Gyógyszer Kártya -->
     <section class="card">
-      <div class="table-header">
-        <h2>Gyógyszerek Keresése & Új Gyógyszer</h2>
+      <div class="table-header" style="justify-content: flex-end; margin-bottom: 0.5rem;">
         <button type="button" id="btn-open-add-modal" class="btn btn-success" style="background: #10b981; border-color: #059669;">+ Új Gyógyszer Felvétele</button>
       </div>
 
       <div class="patient-grid">
-        <div class="form-group">
-          <label for="torzs-search-input">Gyorskeresés (Vonalkód, Név vagy Morfológia)</label>
-          <input type="text" id="torzs-search-input" placeholder="Gépeljen a kereséshez..." autofocus>
+        <div class="form-group" style="margin-bottom: 0;">
+          <input type="text" id="torzs-search-input" placeholder="🔎Keresés" autofocus style="font-size: 1.05rem; padding: 0.75rem;">
         </div>
       </div>
     </section>
@@ -38,7 +36,7 @@
     <!-- Gyógyszertörzs Táblázat -->
     <section class="card">
       <div class="table-header">
-        <h2>Kórházi Gyógyszertörzs (<span id="total-count">0</span> tétel)</h2>
+        <h2>Gyógyszertörzs (<span id="total-count">0</span> tétel)</h2>
         <button type="button" id="btn-refresh-torzs" class="btn btn-secondary btn-sm">Frissítés</button>
       </div>
 
@@ -46,7 +44,7 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Vonalkód (EAN / GTIN)</th>
+              <th>Vonalkód</th>
               <th>Gyógyszer Neve</th>
               <th>Morfológiai Leírás</th>
               <th>Műveletek</th>
