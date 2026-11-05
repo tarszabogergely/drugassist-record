@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     modalPatientInfo.innerHTML = `
       <div><strong>Gyógyszerelési Azonosító:</strong> <code>${trayId}</code></div>
       <div><strong>Osztály / Ágy:</strong> ${rec.ward} / ${rec.bed_number || '-'}</div>
-      <div><strong>TAJ:</strong> ${rec.patient_taj || 'Nincs megadva'} | <strong>Státusz:</strong> ${rec.status === 'verified' ? 'Ellenőrizve' : 'Piszkozat'}</div>
+      <div><strong>TAJ:</strong> ${rec.patient_taj || 'Nincs megadva'} | <strong>Státusz:</strong> ${rec.status === 'verified' ? 'Ellenőrizve' : 'Gyógyszerelve'}</div>
       <div><strong>Megjegyzés:</strong> <em>${rec.notes || 'Nincs megjegyzés.'}</em></div>
     `;
 
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 4. OSZTÁLYOS PDF ÁTADÓ GENERÁLÁSA (Logóval, középfejléccel & formázott beteg sorokkal)
+  // 4. OSZTÁLYOS PDF ÁTADÓ GENERÁLÁSA
   window.generateWardPDF = async function(wardName) {
     const wardRecords = dayRecords.filter(r => (r.ward || 'Egyéb Osztály') === wardName);
     if (wardRecords.length === 0) return;
@@ -258,27 +258,25 @@ document.addEventListener('DOMContentLoaded', () => {
       doc.setFont("helvetica", "normal");
       doc.text(`Dátum: ${selectedDateStr}`, 105, 40, { align: 'center' });
 
-      // VÁLASZTÓVONAL
+      // VÁLASZTÓVONAL A FEJLÉC ALATT
       doc.setLineWidth(0.5);
       doc.line(14, 44, 196, 44);
 
       let startY = 52;
 
-      for (const rec of wardRecords) {
+      for (let i = 0; i < wardRecords.length; i++) {
+        const rec = wardRecords[i];
         const trayId = extractTrayId(rec.qr_identifier);
         
-        // Beteg sor felépítése vegyes betűtípussal (Félkövér + Normál az azonosítónak)
+        // Beteg sor felépítése
         doc.setFontSize(10);
-        
-        // 1. Félkövér rész: Beteg, TAJ, Ágy és a záró határoló |
-doc.setFont("helvetica", "bold");
-const boldText = `Beteg: ${rec.patient_name} | TAJ: ${rec.patient_taj || 'Nincs'} | Ágy: ${rec.bed_number || '-'} |`;
-doc.text(boldText, 14, startY);
+        doc.setFont("helvetica", "bold");
+        const boldText = `Beteg: ${rec.patient_name} | TAJ: ${rec.patient_taj || 'Nincs'} | Ágy: ${rec.bed_number || '-'} |`;
+        doc.text(boldText, 14, startY);
 
-// 2. Normál rész: Egy explicit szóköz a szöveg elején az Azonosító előtt
-const boldWidth = doc.getTextWidth(boldText);
-doc.setFont("helvetica", "normal");
-doc.text(` Azonosító: ${trayId}`, 14 + boldWidth, startY);
+        const boldWidth = doc.getTextWidth(boldText);
+        doc.setFont("helvetica", "normal");
+        doc.text(` Azonosító: ${trayId}`, 14 + boldWidth, startY);
 
         startY += 5;
 
@@ -316,7 +314,40 @@ doc.text(` Azonosító: ${trayId}`, 14 + boldWidth, startY);
           margin: { left: 14, right: 14 }
         });
 
-        startY = doc.lastAutoTable.finalY + 8;
+        startY = doc.lastAutoTable.finalY + 4;
+
+        // MEGJEGYZÉS ÉS ALÁÍRÓK SOCIAK BETEGENKÉNT
+        doc.setFontSize(8.5);
+        
+        // Megjegyzés sor
+        doc.setFont("helvetica", "bold");
+        doc.text("Megjegyzés: ", 14, startY);
+        doc.setFont("helvetica", "normal");
+        doc.text(rec.notes || "", 35, startY);
+        startY += 4;
+
+        // Gyógyszerelte és Ellenőrizte sorok
+        doc.setFont("helvetica", "bold");
+        doc.text("Gyógyszerelte: ", 14, startY);
+        doc.setFont("helvetica", "normal");
+        doc.text(rec.dispensed_by || "-", 35, startY);
+
+        doc.setFont("helvetica", "bold");
+        doc.text("Ellenőrizte: ", 110, startY);
+        doc.setFont("helvetica", "normal");
+        doc.text(rec.verified_by || "-", 127, startY);
+
+        startY += 6;
+
+        // PONTOZOTT ELVÁLASZTÓ VONAL A BETEGEK KÖZÖTT
+        if (i < wardRecords.length - 1) {
+          doc.setLineWidth(0.3);
+          doc.setDrawColor(160, 160, 160);
+          doc.setLineDashPattern([1, 1], 0); // Pontozott vonal
+          doc.line(14, startY, 196, startY);
+          doc.setLineDashPattern([], 0); // Vonalstílus visszaállítása folytonosra
+          startY += 8;
+        }
 
         if (startY > 230) {
           doc.addPage();
@@ -324,12 +355,13 @@ doc.text(` Azonosító: ${trayId}`, 14 + boldWidth, startY);
         }
       }
 
-      // ALÁÍRÁSOK
+      // LÁBLÉC ALÁÍRÁSOK (A dokumentum legvégén)
       const pageCount = doc.internal.getNumberOfPages();
       doc.setPage(pageCount);
 
       const footerY = 270;
       doc.setLineWidth(0.3);
+      doc.setDrawColor(0, 0, 0);
 
       doc.line(14, footerY, 65, footerY);
       doc.setFontSize(9);
