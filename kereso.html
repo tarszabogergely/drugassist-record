@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DrugAssist - Gyógyszer Morfológia Kereső</title>
+  
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      padding: 1rem;
+      min-height: 100vh;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 600px;
+      margin-top: 1rem;
+    }
+
+    /* Fejléc */
+    .header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-hover);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .header p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Kereső doboz és találati lista */
+    .search-wrapper {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 1rem 1.25rem;
+      font-size: 1.1rem;
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius);
+      outline: none;
+      background: var(--card-bg);
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+    }
+
+    /* Legördülő találati lista */
+    .autocomplete-list {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      max-height: 280px;
+      overflow-y: auto;
+      z-index: 100;
+      display: none;
+    }
+
+    .autocomplete-item {
+      padding: 0.85rem 1.25rem;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 1rem;
+      transition: background 0.15s ease;
+    }
+
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+
+    .autocomplete-item:hover, .autocomplete-item:active {
+      background-color: #f0f9ff;
+      color: var(--primary);
+    }
+
+    /* Morfológia Kártya */
+    .result-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      display: none;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary-hover);
+      margin-bottom: 0.75rem;
+      line-height: 1.3;
+    }
+
+    .morphology-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .morphology-text {
+      font-size: 1.05rem;
+      line-height: 1.5;
+      color: var(--text-main);
+      background: #f1f5f9;
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--primary);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <div class="header">
+      <h1>💊 Gyógyszer Morfológia</h1>
+      <p>Kórházi Gyógyszertörzs Gyorskereső</p>
+    </div>
+
+    <!-- Kereső Mező -->
+    <div class="search-wrapper">
+      <input 
+        type="text" 
+        id="med-search-input" 
+        class="search-input" 
+        placeholder="🔎 Gépeljen legalább 3 karaktert..." 
+        autocomplete="off"
+        autofocus
+      >
+      <div id="autocomplete-list" class="autocomplete-list"></div>
+    </div>
+
+    <!-- Eredmény Kártya -->
+    <div id="result-card" class="result-card">
+      <div class="result-title" id="res-med-name">--</div>
+      <div class="morphology-badge">Morfológia (Alak, Szín, Felezővonal)</div>
+      <div class="morphology-text" id="res-med-morphology">--</div>
+    </div>
+  </div>
+
+  <script>
+    // --- SUPABASE INICIALIZÁLÁS ---
+    // A supabase-config.js-ben használt kulcsaidat ide behelyettesítheted, vagy automatikusan átveszi:
+    const SUPABASE_URL = 'https://YOUR_SUPABASE_PROJECT.supabase.co'; // Cseréld ki a sajátodra, ha külön álló fájlként fut!
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';             // Cseréld ki a sajátodra!
+
+    let db;
+    // Ha a projektben már létezik a supabase-config.js, azt is be töltheted, különben:
+    if (window.supabase) {
+      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    // DOM Elemek
+    const searchInput = document.getElementById('med-search-input');
+    const autocompleteList = document.getElementById('autocomplete-list');
+    const resultCard = document.getElementById('result-card');
+    const resMedName = document.getElementById('res-med-name');
+    const resMedMorphology = document.getElementById('res-med-morphology');
+
+    let debounceTimer = null;
+
+    // Keresés gépeléskor (3 betű után)
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.trim();
+
+      clearTimeout(debounceTimer);
+
+      if (query.length < 3) {
+        autocompleteList.style.display = 'none';
+        return;
+      }
+
+      // 250ms késleltetés a felesleges hálózati kérések elkerülésére
+      debounceTimer = setTimeout(() => {
+        searchMedications(query);
+      }, 250);
+    });
+
+    // Gyógyszerek lekérdezése Supabase-ből
+    async function searchMedications(searchTerm) {
+      try {
+        const { data, error } = await db
+          .from('medication_master')
+          .select('id, name, morphology')
+          .ilike('name', `%${searchTerm}%`)
+          .order('name', { ascending: true })
+          .limit(10);
+
+        if (error) throw error;
+
+        renderAutocomplete(data || []);
+      } catch (err) {
+        console.error('Keresési hiba:', err);
+      }
+    }
+
+    // Autocomplete lista kirajzolása
+    function renderAutocomplete(items) {
+      if (items.length === 0) {
+        autocompleteList.innerHTML = '<div class="empty-state">Nincs találat.</div>';
+        autocompleteList.style.display = 'block';
+        return;
+      }
+
+      autocompleteList.innerHTML = items.map(item => `
+        <div class="autocomplete-item" data-name="${escapeHtml(item.name)}" data-morphology="${escapeHtml(item.morphology || 'Nincs rögzített morfológiai leírás.')}">
+          ${escapeHtml(item.name)}
+        </div>
+      `).join('');
+
+      autocompleteList.style.display = 'block';
+
+      // Kattintás esemény a lista elemeire
+      document.querySelectorAll('.autocomplete-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const name = el.getAttribute('data-name');
+          const morphology = el.getAttribute('data-morphology');
+
+          displayResult(name, morphology);
+        });
+      });
+    }
+
+    // Eredmény megjelenítése a kártyán
+    function displayResult(name, morphology) {
+      resMedName.innerText = name;
+      resMedMorphology.innerText = morphology;
+      
+      resultCard.style.display = 'block';
+      autocompleteList.style.display = 'none';
+      searchInput.value = name;
+    }
+
+    // Külső kattintásra bezárja a legördülő listát
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !autocompleteList.contains(e.target)) {
+        autocompleteList.style.display = 'none';
+      }
+    });
+
+    // HTML escape segédfunkció biztonsági okokból
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, match => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[match]));
+    }
+  </script>
+</body>
+</html>
