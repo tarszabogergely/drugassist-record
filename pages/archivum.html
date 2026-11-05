@@ -13,7 +13,7 @@
   <!-- Fejléc -->
   <header class="app-header" style="background: #6f42c1;">
     <div class="logo">
-      <h1>Gyógyszerelési Archívum & Átadók</h1>
+      <h1>Archívum & átadók</h1>
     </div>
     <div class="user-info" style="display: flex; align-items: center; gap: 1rem;">
       <a href="../index.html" class="back-link" style="color: white; text-decoration: none; font-weight: bold; background: rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 4px;">🏠 Főmenü</a>
@@ -22,16 +22,14 @@
   </header>
 
   <main class="container">
-    <!-- Napválasztó Kártya -->
-    <section class="card">
-      <h2>Dátum Kiválasztása</h2>
-      <div style="display: flex; align-items: flex-end; gap: 0.75rem; flex-wrap: wrap;">
+    <!-- Napválasztó Kártya (Feliratok nélkül, letisztítva) -->
+    <section class="card" style="padding: 1.25rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
         <div class="form-group" style="margin-bottom: 0;">
-          <label for="archive-date-picker">Válasszon dátumot:</label>
           <input type="date" id="archive-date-picker" style="font-size: 1rem; padding: 0.5rem 0.75rem;">
         </div>
         <button type="button" id="btn-today" class="btn btn-secondary" style="padding: 0.55rem 1rem;">Mai nap</button>
-        <button type="button" id="btn-load-archive" class="btn btn-primary" style="padding: 0.55rem 1.25rem;">Szűrés</button>
+        <button type="button" id="btn-load-archive" class="btn btn-primary" style="padding: 0.55rem 1.25rem; background: #6f42c1; border-color: #59359a;">Szűrés</button>
       </div>
     </section>
 
