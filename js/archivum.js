@@ -221,6 +221,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const wardRecords = dayRecords.filter(r => (r.ward || 'Egyéb Osztály') === wardName);
     if (wardRecords.length === 0) return;
 
+    // Felhasználói profilok lekérdezése a teljes nevek (full_name) megjelenítéséhez
+    const { data: profiles } = await db.from('profiles').select('id, username, full_name');
+    const userMap = {};
+    if (profiles) {
+      profiles.forEach(p => {
+        userMap[p.username] = p.full_name;
+        userMap[p.id] = p.full_name;
+      });
+    }
+
     // Logó kép betöltése és Base64 konvertálása
     const logoUrl = 'https://drugassist-record.netlify.app/drugassistlogo_feher.png';
     const img = new Image();
@@ -316,7 +326,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         startY = doc.lastAutoTable.finalY + 4;
 
-        // MEGJEGYZÉS ÉS ALÁÍRÓK SOCIAK BETEGENKÉNT
+        // TELJES NEVEK FELHASZNÁLÁSA A DISPENSED_BY ÉS VERIFIED_BY ÉRTÉKEKBŐL
+        const dispensedByName = userMap[rec.dispensed_by] || rec.dispensed_by || '-';
+        const verifiedByName = userMap[rec.verified_by] || rec.verified_by || '-';
+
         doc.setFontSize(8.5);
         
         // Megjegyzés sor
@@ -326,16 +339,16 @@ document.addEventListener('DOMContentLoaded', () => {
         doc.text(rec.notes || "", 35, startY);
         startY += 4;
 
-        // Gyógyszerelte és Ellenőrizte sorok
+        // Gyógyszerelte és Ellenőrizte sorok (Teljes nevekkel!)
         doc.setFont("helvetica", "bold");
         doc.text("Gyógyszerelte: ", 14, startY);
         doc.setFont("helvetica", "normal");
-        doc.text(rec.dispensed_by || "-", 35, startY);
+        doc.text(dispensedByName, 35, startY);
 
         doc.setFont("helvetica", "bold");
-        doc.text("Ellenőrizte: ", 110, startY);
+        doc.text("Ellenörizte: ", 110, startY);
         doc.setFont("helvetica", "normal");
-        doc.text(rec.verified_by || "-", 127, startY);
+        doc.text(verifiedByName, 127, startY);
 
         startY += 6;
 
