@@ -2,7 +2,7 @@
 <html lang="hu">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>DrugAssist - Gyógyszer Morfológia Kereső</title>
   
   <style>
@@ -24,19 +24,26 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    body {
+    /* Görgetés teljes tiltása fel-le és oldalra */
+    html, body {
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      touch-action: none;
       background-color: var(--bg-color);
       color: var(--text-main);
+    }
+
+    body {
       display: flex;
       justify-content: center;
       padding: 1rem;
-      min-height: 100vh;
     }
 
     .app-container {
       width: 100%;
       max-width: 600px;
-      margin-top: 1rem;
+      margin-top: 0.5rem;
     }
 
     /* Fejléc Logóval */
@@ -45,31 +52,31 @@
       align-items: center;
       justify-content: center;
       gap: 0.75rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
     }
 
     .header img {
-      width: 42px;
-      height: 42px;
+      width: 40px;
+      height: 40px;
       object-fit: contain;
     }
 
     .header h1 {
-      font-size: 1.8rem;
+      font-size: 1.75rem;
       font-weight: 800;
       color: var(--primary-hover);
       letter-spacing: -0.02em;
     }
 
-    /* Kereső doboz és találati lista */
+    /* Kereső doboz és törlő gomb (X) */
     .search-wrapper {
       position: relative;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
     }
 
     .search-input {
       width: 100%;
-      padding: 1rem 1.25rem;
+      padding: 1rem 2.8rem 1rem 1.25rem;
       font-size: 1.1rem;
       border: 2px solid var(--border-color);
       border-radius: var(--radius);
@@ -84,6 +91,32 @@
       box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
     }
 
+    /* Törlés (X) ikon */
+    .clear-btn {
+      position: absolute;
+      right: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #e2e8f0;
+      color: #64748b;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 14px;
+      font-weight: bold;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .clear-btn:hover {
+      background: #cbd5e1;
+      color: #1e293b;
+    }
+
     /* Legördülő találati lista */
     .autocomplete-list {
       position: absolute;
@@ -94,10 +127,11 @@
       border: 1px solid var(--border-color);
       border-radius: var(--radius);
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-      max-height: 280px;
+      max-height: 260px;
       overflow-y: auto;
       z-index: 100;
       display: none;
+      touch-action: pan-y; /* A találati listán belül lehessen görgetni, ha sok a tétel */
     }
 
     .autocomplete-item {
@@ -117,12 +151,12 @@
       color: var(--primary);
     }
 
-    /* Eredmény Kártya (Egyetlen letisztult buborék) */
+    /* Eredmény Kártya */
     .result-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: var(--radius);
-      padding: 1.5rem;
+      padding: 1.25rem 1.5rem;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
       display: none;
       animation: fadeIn 0.25s ease-out;
@@ -134,7 +168,7 @@
     }
 
     .result-title {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       font-weight: 700;
       color: var(--primary-hover);
       margin-bottom: 0.75rem;
@@ -164,7 +198,7 @@
       <h1>DrugAssist</h1>
     </div>
 
-    <!-- Kereső Mező -->
+    <!-- Kereső Mező X törlőgombbal -->
     <div class="search-wrapper">
       <input 
         type="text" 
@@ -174,6 +208,7 @@
         autocomplete="off"
         autofocus
       >
+      <button type="button" id="clear-search-btn" class="clear-btn" title="Keresés törlése">✕</button>
       <div id="autocomplete-list" class="autocomplete-list"></div>
     </div>
 
@@ -190,6 +225,7 @@
 
   <script>
     const searchInput = document.getElementById('med-search-input');
+    const clearBtn = document.getElementById('clear-search-btn');
     const autocompleteList = document.getElementById('autocomplete-list');
     const resultCard = document.getElementById('result-card');
     const resMedName = document.getElementById('res-med-name');
@@ -197,9 +233,13 @@
 
     let debounceTimer = null;
 
+    // Gépelés figyelése (3 karakter felett keres, gomb láthatóságát állítja)
     searchInput.addEventListener('input', () => {
       const query = searchInput.value.trim();
       clearTimeout(debounceTimer);
+
+      // X gomb láthatósága
+      clearBtn.style.display = searchInput.value.length > 0 ? 'flex' : 'none';
 
       if (query.length < 3) {
         autocompleteList.style.display = 'none';
@@ -209,6 +249,15 @@
       debounceTimer = setTimeout(() => {
         searchMedications(query);
       }, 250);
+    });
+
+    // Törlő gomb (X) kattintás
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      clearBtn.style.display = 'none';
+      autocompleteList.style.display = 'none';
+      resultCard.style.display = 'none';
+      searchInput.focus();
     });
 
     async function searchMedications(searchTerm) {
@@ -258,10 +307,11 @@
       resultCard.style.display = 'block';
       autocompleteList.style.display = 'none';
       searchInput.value = name;
+      clearBtn.style.display = 'flex';
     }
 
     document.addEventListener('click', (e) => {
-      if (!searchInput.contains(e.target) && !autocompleteList.contains(e.target)) {
+      if (!searchInput.contains(e.target) && !autocompleteList.contains(e.target) && !clearBtn.contains(e.target)) {
         autocompleteList.style.display = 'none';
       }
     });
