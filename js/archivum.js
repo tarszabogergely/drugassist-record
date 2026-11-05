@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   const trayId = extractTrayId(rec.qr_identifier);
                   const isVerified = rec.status === 'verified';
                   const badgeStyle = isVerified ? 'background:#28a745; color:white;' : 'background:#ffc107; color:#333;';
-                  const statusText = isVerified ? '✓ Ellenőrizve' : 'Piszkozat';
+                  const statusText = isVerified ? '✓ Ellenőrizve' : 'Gyógyszerelve';
 
                   return `
                     <tr>
