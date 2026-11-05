@@ -9,11 +9,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('patient-search-input');
   const tableBody = document.getElementById('patients-table-body');
   
+  // Edit Modal DOM
+  const patientEditModal = document.getElementById('patient-edit-modal');
+  const btnCloseEditModal = document.getElementById('btn-close-edit-modal');
+  const btnCancelEditPatient = document.getElementById('btn-cancel-edit-patient');
+  const editPatientForm = document.getElementById('edit-patient-form');
+  const editPatientId = document.getElementById('edit-patient-id');
+  const editPatientName = document.getElementById('edit-patient-name');
+  const editPatientTaj = document.getElementById('edit-patient-taj');
+
+  // History Modal DOM
   const historyModal = document.getElementById('patient-history-modal');
   const btnCloseHistoryModal = document.getElementById('btn-close-history-modal');
   const historyBody = document.getElementById('patient-history-body');
   const hPatientName = document.getElementById('h-patient-name');
 
+  // Detail Modal DOM
   const trayDetailModal = document.getElementById('tray-detail-modal');
   const btnCloseDetailModal = document.getElementById('btn-close-detail-modal');
   const detailPatient = document.getElementById('detail-patient');
@@ -57,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Táblázat kirajzolása (Szerkeszthető Név és TAJ mezőkkel)
+  // Táblázat kirajzolása (Sima szöveggel + Szerkesztés és Előzmények gombokkal)
   function renderPatients(patientsList) {
     if (patientsList.length === 0) {
       tableBody.innerHTML = '<tr class="empty-row"><td colspan="6">Nem található beteg a nyilvántartásban.</td></tr>';
@@ -66,44 +77,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tableBody.innerHTML = patientsList.map(p => `
       <tr>
-        <td>
-          <input type="text" class="patient-input-inline" style="font-weight: bold;" value="${p.name || ''}" onchange="updatePatientField('${p.id}', 'name', this.value)">
-        </td>
-        <td>
-          <input type="text" class="patient-input-inline" value="${p.taj_number || ''}" placeholder="TAJ megadása..." onchange="updatePatientField('${p.id}', 'taj_number', this.value)">
-        </td>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.taj_number || '-'}</td>
         <td>${p.ward || '-'}</td>
         <td>${p.bed_number || '-'}</td>
         <td>${new Date(p.created_at).toLocaleString('hu-HU')}</td>
-        <td>
+        <td style="white-space: nowrap;">
+          <button type="button" onclick="openEditModal('${p.id}')" class="btn btn-primary btn-sm" style="background:#3b82f6; border:none; margin-right:0.3rem;">✏️ Szerkesztés</button>
           <button type="button" onclick="viewHistory('${p.name}')" class="btn btn-secondary btn-sm">Gyógyszerelési Előzmények</button>
         </td>
       </tr>
     `).join('');
   }
 
-  // Beteg adatainak azonnali mentése szerkesztéskor
-  window.updatePatientField = async function(patientId, field, newValue) {
-    try {
-      const updateData = {};
-      updateData[field] = newValue.trim();
+  // 3. Szerkesztő Modal Megnyitása
+  window.openEditModal = function(patientId) {
+    const target = allPatients.find(p => p.id === patientId);
+    if (!target) return;
 
+    editPatientId.value = target.id;
+    editPatientName.value = target.name || '';
+    editPatientTaj.value = target.taj_number || '';
+
+    patientEditModal.style.display = 'flex';
+    editPatientName.focus();
+  };
+
+  // Szerkesztett Adatok Mentése (Supabase)
+  editPatientForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const id = editPatientId.value;
+    const newName = editPatientName.value.trim();
+    const newTaj = editPatientTaj.value.trim();
+
+    if (!newName) {
+      alert('A beteg neve nem lehet üres!');
+      return;
+    }
+
+    try {
       const { error } = await db
         .from('patients')
-        .update(updateData)
-        .eq('id', patientId);
+        .update({
+          name: newName,
+          taj_number: newTaj || null
+        })
+        .eq('id', id);
 
       if (error) throw error;
 
-      // Helyi tömb frissítése
-      const target = allPatients.find(p => p.id === patientId);
-      if (target) target[field] = newValue.trim();
-
+      patientEditModal.style.display = 'none';
+      loadPatients();
     } catch (err) {
-      console.error('Hiba a beteg frissítésekor:', err);
+      console.error('Hiba a beteg mentésekor:', err);
       alert('Hiba történt a beteg adatainak mentése során!');
     }
-  };
+  });
 
   // Live Search szűrés
   if (searchInput) {
@@ -119,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 3. Beteg előzményeinek megtekintése (Gyártási azonosítóval és kattintható sorokkal)
+  // 4. Beteg előzményeinek megtekintése
   window.viewHistory = async function(patientName) {
     hPatientName.innerText = patientName;
     historyBody.innerHTML = '<tr class="empty-row"><td colspan="5">Előzmények lekérdezése...</td></tr>';
@@ -144,7 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const badgeStyle = isVerified ? 'background:#10b981; color:white;' : 'background:#f59e0b; color:white;';
         const statusText = isVerified ? '✓ Ellenőrizve' : 'Várakozik';
 
-        // Gyártási azonosító kinyerése a QR kódból (utolsó elem a ?? elválasztás után)
         let batchIdDisplay = '-';
         if (r.qr_identifier && r.qr_identifier.includes('??')) {
           const parts = r.qr_identifier.split('??');
@@ -169,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // 4. Tálca részletes gyógyszerelési adatainak megjelenítése
+  // 5. Tálca részletes gyógyszerelési adatainak megjelenítése
   window.openTrayDetails = async function(recordId) {
     detailItemsBody.innerHTML = '<tr class="empty-row"><td colspan="7">Részletek betöltése...</td></tr>';
     trayDetailModal.style.display = 'flex';
@@ -233,19 +262,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // 5. Modalok bezárása (Gombra és Esc billentyűre)
-  if (btnCloseHistoryModal) {
-    btnCloseHistoryModal.addEventListener('click', () => historyModal.style.display = 'none');
-  }
-
-  if (btnCloseDetailModal) {
-    btnCloseDetailModal.addEventListener('click', () => trayDetailModal.style.display = 'none');
-  }
+  // 6. Modalok bezárása (Gombra és Esc billentyűre)
+  if (btnCloseEditModal) btnCloseEditModal.addEventListener('click', () => patientEditModal.style.display = 'none');
+  if (btnCancelEditPatient) btnCancelEditPatient.addEventListener('click', () => patientEditModal.style.display = 'none');
+  if (btnCloseHistoryModal) btnCloseHistoryModal.addEventListener('click', () => historyModal.style.display = 'none');
+  if (btnCloseDetailModal) btnCloseDetailModal.addEventListener('click', () => trayDetailModal.style.display = 'none');
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (trayDetailModal && trayDetailModal.style.display === 'flex') {
         trayDetailModal.style.display = 'none';
+      } else if (patientEditModal && patientEditModal.style.display === 'flex') {
+        patientEditModal.style.display = 'none';
       } else if (historyModal && historyModal.style.display === 'flex') {
         historyModal.style.display = 'none';
       }
