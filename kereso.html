@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DrugAssist - Gyógyszer Morfológia Kereső</title>
   
-  <!-- Supabase JS CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
   <style>
     :root {
       --primary: #0284c7;
@@ -42,7 +39,6 @@
       margin-top: 1rem;
     }
 
-    /* Fejléc */
     .header {
       text-align: center;
       margin-bottom: 1.5rem;
@@ -64,7 +60,6 @@
       margin-top: 0.25rem;
     }
 
-    /* Kereső doboz és találati lista */
     .search-wrapper {
       position: relative;
       margin-bottom: 1.5rem;
@@ -87,7 +82,6 @@
       box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
     }
 
-    /* Legördülő találati lista */
     .autocomplete-list {
       position: absolute;
       top: calc(100% + 6px);
@@ -120,7 +114,6 @@
       color: var(--primary);
     }
 
-    /* Morfológia Kártya */
     .result-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -201,19 +194,11 @@
     </div>
   </div>
 
+  <!-- Meglévő Supabase modulok betöltése a projektből -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+
   <script>
-    // --- SUPABASE INICIALIZÁLÁS ---
-    // A supabase-config.js-ben használt kulcsaidat ide behelyettesítheted, vagy automatikusan átveszi:
-    const SUPABASE_URL = 'https://YOUR_SUPABASE_PROJECT.supabase.co'; // Cseréld ki a sajátodra, ha külön álló fájlként fut!
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';             // Cseréld ki a sajátodra!
-
-    let db;
-    // Ha a projektben már létezik a supabase-config.js, azt is be töltheted, különben:
-    if (window.supabase) {
-      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }
-
-    // DOM Elemek
     const searchInput = document.getElementById('med-search-input');
     const autocompleteList = document.getElementById('autocomplete-list');
     const resultCard = document.getElementById('result-card');
@@ -222,10 +207,8 @@
 
     let debounceTimer = null;
 
-    // Keresés gépeléskor (3 betű után)
     searchInput.addEventListener('input', () => {
       const query = searchInput.value.trim();
-
       clearTimeout(debounceTimer);
 
       if (query.length < 3) {
@@ -233,13 +216,11 @@
         return;
       }
 
-      // 250ms késleltetés a felesleges hálózati kérések elkerülésére
       debounceTimer = setTimeout(() => {
         searchMedications(query);
       }, 250);
     });
 
-    // Gyógyszerek lekérdezése Supabase-ből
     async function searchMedications(searchTerm) {
       try {
         const { data, error } = await db
@@ -250,14 +231,12 @@
           .limit(10);
 
         if (error) throw error;
-
         renderAutocomplete(data || []);
       } catch (err) {
         console.error('Keresési hiba:', err);
       }
     }
 
-    // Autocomplete lista kirajzolása
     function renderAutocomplete(items) {
       if (items.length === 0) {
         autocompleteList.innerHTML = '<div class="empty-state">Nincs találat.</div>';
@@ -273,18 +252,15 @@
 
       autocompleteList.style.display = 'block';
 
-      // Kattintás esemény a lista elemeire
       document.querySelectorAll('.autocomplete-item').forEach(el => {
         el.addEventListener('click', () => {
           const name = el.getAttribute('data-name');
           const morphology = el.getAttribute('data-morphology');
-
           displayResult(name, morphology);
         });
       });
     }
 
-    // Eredmény megjelenítése a kártyán
     function displayResult(name, morphology) {
       resMedName.innerText = name;
       resMedMorphology.innerText = morphology;
@@ -294,14 +270,12 @@
       searchInput.value = name;
     }
 
-    // Külső kattintásra bezárja a legördülő listát
     document.addEventListener('click', (e) => {
       if (!searchInput.contains(e.target) && !autocompleteList.contains(e.target)) {
         autocompleteList.style.display = 'none';
       }
     });
 
-    // HTML escape segédfunkció biztonsági okokból
     function escapeHtml(str) {
       return String(str || '').replace(/[&<>"']/g, match => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
