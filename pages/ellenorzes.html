@@ -8,7 +8,7 @@
 </head>
 <body>
 
-  <!-- Fejléc (Szebb smaragdzöld árnyalattal) -->
+  <!-- Fejléc (Smaragdzöld árnyalattal) -->
   <header class="app-header" style="background: #10b981;">
     <div class="logo">
       <h1>Gyógyszerelési Tálcák Ellenőrzése</h1>
@@ -20,45 +20,24 @@
   </header>
 
   <main class="container">
-    <!-- 1. Kártya: Tálca QR Beolvasása (Gyorsnyitás) -->
-    <section class="card">
-      <h2>1. Tálca QR Kód Beolvasása</h2>
+    <!-- Letisztított QR Kereső Kártya -->
+    <section class="card" style="padding: 1.25rem;">
       <div class="patient-grid">
-        <div class="form-group">
-          <label for="verify-qr-input">Tálca QR Kód Olvasása</label>
+        <div class="form-group" style="margin-bottom: 0;">
           <div class="input-with-button">
-            <input type="text" id="verify-qr-input" placeholder="Olvassa be a tálca QR kódját..." autofocus>
-            <button type="button" id="btn-search-qr" class="btn btn-success" style="background: #10b981; border-color: #059669;">Megnyitás</button>
+            <input type="text" id="verify-qr-input" placeholder="🔎Keresés" autofocus style="font-size: 1.05rem; padding: 0.75rem;">
+            <button type="button" id="btn-search-qr" class="btn btn-success" style="background: #10b981; border-color: #059669; padding: 0.75rem 1.25rem;">Megnyitás</button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 2. Kártya: Ellenőrzésre Váró Tálcák Listája -->
-    <section class="card">
-      <div class="table-header">
-        <h2>Ellenőrzésre Váró Tálcák (Piszkozatok)</h2>
-        <button type="button" id="btn-refresh-list" class="btn btn-secondary btn-sm">Lista Frissítése</button>
+    <!-- Osztályonként Csoportosított Tálcák Konténere -->
+    <div id="pending-wards-container">
+      <div class="card">
+        <p class="empty-row">Betöltés folyamatban...</p>
       </div>
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Beteg Neve</th>
-              <th>Osztály / Ágy</th>
-              <th>TAJ szám</th>
-              <th>Rögzítés Időpontja</th>
-              <th>Művelet</th>
-            </tr>
-          </thead>
-          <tbody id="pending-trays-body">
-            <tr class="empty-row">
-              <td colspan="5">Betöltés folyamatban...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+    </div>
   </main>
 
   <!-- Modal: Tálca Ellenőrzése & Jóváhagyása -->
@@ -107,13 +86,13 @@
             <strong style="color: #555;">(Várt QR kód segítségként: <span id="v-expected-qr" style="color: #047857;">--</span>)</strong>
           </p>
           
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom:0;">
             <input type="text" id="verify-confirm-qr-input" placeholder="Olvassa be a tálca QR kódját a jóváhagyás feloldásához..." style="font-size: 1.1rem; border: 2px solid #10b981;">
           </div>
         </div>
       </div>
 
-      <div class="modal-footer" style="padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+      <div class="modal-footer" style="padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
         <span id="role-warning-text" style="color: red; font-weight: bold;" class="hidden">Asszisztensként a jóváhagyás nem engedélyezett!</span>
         <button type="button" id="btn-approve-dispensing" class="btn btn-success btn-large" disabled style="opacity: 0.5; background: #10b981; border-color: #059669;">
           ✓ Tálca Ellenőrizve és Jóváhagyva
