@@ -136,7 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     // "+" GYORSGOMB: GYÓGYSZER HOZZÁADÁSA MODAL NYITÁSA (+ vagy Numpad +)
-    // Szövegbeviteli mezőkben gépeléskor nem váltja ki
     else if ((e.key === '+' || e.code === 'NumpadAdd') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
       e.preventDefault();
       if (btnOpenScanner && !btnOpenScanner.disabled) {
@@ -404,14 +403,39 @@ document.addEventListener('DOMContentLoaded', () => {
         if (itemsErr) throw itemsErr;
 
         alert('Tálca sikeresen lezárva és elmentve!');
-        window.location.reload();
+        
+        // Form és adatok ürítése
+        resetDispensingPage();
+
       } catch (err) {
         console.error('Mentési hiba:', err);
         alert(`Hiba történt a tálca mentése során!\n\nRészletek: ${err.message}`);
       } finally {
-        btnSaveDispensing.disabled = false;
+        btnSaveDispensing.disabled = true;
         btnSaveDispensing.innerText = '✓ Lezárás';
       }
     });
+  }
+
+  // 7. Segédfunkció: Form és állapottömbök teljes kiürítése lezárás után
+  function resetDispensingPage() {
+    currentTrayItems = [];
+    currentPatient = null;
+    currentScannedMed = null;
+
+    if (qrInput) qrInput.value = '';
+    if (dispensingNotes) dispensingNotes.value = '';
+
+    if (pName) pName.innerText = '-';
+    if (pTaj) pTaj.innerText = '-';
+    if (pWard) pWard.innerText = '-';
+    if (pBed) pBed.innerText = '-';
+    if (pTime) pTime.innerText = '-';
+
+    if (btnOpenScanner) btnOpenScanner.disabled = true;
+    if (btnSaveDispensing) btnSaveDispensing.disabled = true;
+    renderTrayTable();
+
+    if (qrInput) qrInput.focus();
   }
 });
