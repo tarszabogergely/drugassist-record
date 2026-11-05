@@ -1,5 +1,5 @@
 /**
- * DrugAssist Record - Modalos Gyógyszerészi Ellenőrző Modul
+ * DrugAssist Record - Modalos Gyógyszerészi Ellenőrző Modul (Osztályonkénti nézet)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,8 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // DOM elemek
   const verifyQrInput = document.getElementById('verify-qr-input');
   const btnSearchQr = document.getElementById('btn-search-qr');
-  const btnRefreshList = document.getElementById('btn-refresh-list');
-  const pendingTraysBody = document.getElementById('pending-trays-body');
+  const pendingWardsContainer = document.getElementById('pending-wards-container');
   
   const verifyModal = document.getElementById('verify-modal');
   const btnCloseVerifyModal = document.getElementById('btn-close-verify-modal');
@@ -39,19 +38,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (roleWarningText) roleWarningText.classList.remove('hidden');
   }
 
-  // 2. Várakozó tálcák betöltése
+  // 2. Várakozó tálcák betöltése és csoportosítása osztályonként
   loadPendingTrays();
-
-  if (btnRefreshList) btnRefreshList.addEventListener('click', loadPendingTrays);
 
   async function loadPendingTrays() {
     try {
-      pendingTraysBody.innerHTML = '<tr class="empty-row"><td colspan="5">Betöltés folyamatban...</td></tr>';
+      pendingWardsContainer.innerHTML = '<div class="card"><p class="empty-row">Betöltés folyamatban...</p></div>';
 
       const { data: records, error } = await db
         .from('dispensing_records')
         .select('*')
         .eq('status', 'draft')
+        .order('ward', { ascending: true })
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -59,24 +57,57 @@ document.addEventListener('DOMContentLoaded', () => {
       pendingRecords = records || [];
 
       if (pendingRecords.length === 0) {
-        pendingTraysBody.innerHTML = '<tr class="empty-row"><td colspan="5">Nincs ellenőrzésre váró tálca.</td></tr>';
+        pendingWardsContainer.innerHTML = '<div class="card"><p class="empty-row">Nincs ellenőrzésre váró tálca.</p></div>';
         return;
       }
 
-      pendingTraysBody.innerHTML = pendingRecords.map(rec => `
-        <tr>
-          <td><strong>${rec.patient_name}</strong></td>
-          <td>${rec.ward} / ${rec.bed_number || '-'}</td>
-          <td>${rec.patient_taj || 'Nincs megadva'}</td>
-          <td>${new Date(rec.created_at).toLocaleString('hu-HU')}</td>
-          <td>
-            <button type="button" onclick="openVerifyModal('${rec.id}')" class="btn btn-primary btn-sm">Ellenőrzés Megnyitása</button>
-          </td>
-        </tr>
+      // Osztályok szerinti csoportosítás
+      const wardsGrouped = {};
+      pendingRecords.forEach(r => {
+        const wName = r.ward || 'Egyéb Osztály';
+        if (!wardsGrouped[wName]) wardsGrouped[wName] = [];
+        wardsGrouped[wName].push(r);
+      });
+
+      // Csoportosított táblázatok kirajzolása (Osztály oszlop nélkül)
+      pendingWardsContainer.innerHTML = Object.entries(wardsGrouped).map(([wardName, recordsInWard]) => `
+        <section class="card" style="margin-bottom: 1.5rem;">
+          <div class="table-header" style="border-bottom: 2px solid #10b981; padding-bottom: 0.5rem; margin-bottom: 1rem;">
+            <h2 style="color: #047857; margin:0;">${wardName} (${recordsInWard.length} tálca)</h2>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Beteg Neve</th>
+                  <th>Ágyszám</th>
+                  <th>TAJ szám</th>
+                  <th>Rögzítés Időpontja</th>
+                  <th>Művelet</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${recordsInWard.map(rec => `
+                  <tr>
+                    <td><strong>${rec.patient_name}</strong></td>
+                    <td>${rec.bed_number || '-'}</td>
+                    <td>${rec.patient_taj || 'Nincs megadva'}</td>
+                    <td>${new Date(rec.created_at).toLocaleString('hu-HU')}</td>
+                    <td>
+                      <button type="button" onclick="openVerifyModal('${rec.id}')" class="btn btn-primary btn-sm" style="background:#10b981; border-color:#059669;">Ellenőrzés Megnyitása</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </section>
       `).join('');
+
     } catch (err) {
       console.error('Lista betöltési hiba:', err);
-      pendingTraysBody.innerHTML = '<tr class="empty-row"><td colspan="5" style="color:red;">Hiba történt a tálcák betöltésekor.</td></tr>';
+      pendingWardsContainer.innerHTML = '<div class="card"><p class="empty-row" style="color:red;">Hiba történt a tálcák betöltésekor.</p></div>';
     }
   }
 
@@ -184,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Modal Bezárás
+  // Modal Bezárás (Gombra és Esc billentyűre)
   if (btnCloseVerifyModal) {
     btnCloseVerifyModal.addEventListener('click', () => {
       verifyModal.style.display = 'none';
@@ -192,7 +223,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 4. QR Kód Validáció a Modalban (Csak egyezés esetén engedi a gombot)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && verifyModal && verifyModal.style.display === 'flex') {
+      verifyModal.style.display = 'none';
+      activeRecord = null;
+    }
+  });
+
+  // 4. QR Kód Validáció a Modalban
   confirmQrInput.addEventListener('input', checkQrMatch);
   confirmQrInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !btnApproveDispensing.disabled) {
@@ -204,7 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!activeRecord) return;
     const typedQr = confirmQrInput.value.trim();
 
-    // Csak akkor engedélyezi, ha megegyezik a QR kód ÉS a felhasználó Gyógyszerész!
     if (typedQr === activeRecord.qr_identifier && currentUser.role === 'pharmacist') {
       btnApproveDispensing.disabled = false;
       btnApproveDispensing.style.opacity = '1';
