@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${rec.patient_taj || 'Nincs megadva'}</td>
                     <td>${new Date(rec.created_at).toLocaleString('hu-HU')}</td>
                     <td>
-                      <button type="button" onclick="openVerifyModal('${rec.id}')" class="btn btn-primary btn-sm" style="background:#10b981; border-color:#059669;">Ellenőrzés Megnyitása</button>
+                      <button type="button" onclick="openVerifyModal('${rec.id}')" class="btn btn-primary btn-sm" style="background:#10b981; border-color:#059669;">Ellenőrzés</button>
                     </td>
                   </tr>
                 `).join('')}
