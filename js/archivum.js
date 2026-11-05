@@ -270,15 +270,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Beteg sor felépítése vegyes betűtípussal (Félkövér + Normál az azonosítónak)
         doc.setFontSize(10);
         
-        // 1. Félkövér rész: Beteg, TAJ, Ágy, határoló vonal és szóköz
+        // 1. Félkövér rész: Beteg, TAJ, Ágy és a záró határoló |
 doc.setFont("helvetica", "bold");
-const boldText = `Beteg: ${rec.patient_name} | TAJ: ${rec.patient_taj || 'Nincs'} | Ágy: ${rec.bed_number || '-'} | `;
+const boldText = `Beteg: ${rec.patient_name} | TAJ: ${rec.patient_taj || 'Nincs'} | Ágy: ${rec.bed_number || '-'} |`;
 doc.text(boldText, 14, startY);
 
-// 2. Normál rész: Azonosító (pontosan a szóköz után fűzve)
+// 2. Normál rész: Egy explicit szóköz a szöveg elején az Azonosító előtt
 const boldWidth = doc.getTextWidth(boldText);
 doc.setFont("helvetica", "normal");
-doc.text(`Azonosító: ${trayId}`, 14 + boldWidth, startY);
+doc.text(` Azonosító: ${trayId}`, 14 + boldWidth, startY);
 
         startY += 5;
 
