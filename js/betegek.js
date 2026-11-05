@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${new Date(p.created_at).toLocaleString('hu-HU')}</td>
         <td style="white-space: nowrap;">
           <button type="button" onclick="openEditModal('${p.id}')" class="btn btn-primary btn-sm" style="background:#3b82f6; border:none; margin-right:0.3rem;">✏️ Szerkesztés</button>
-          <button type="button" onclick="viewHistory('${p.name}')" class="btn btn-secondary btn-sm">Gyógyszerelési Előzmények</button>
+          <button type="button" onclick="viewHistory('${p.name}')" class="btn btn-secondary btn-sm">Előzmények</button>
         </td>
       </tr>
     `).join('');
