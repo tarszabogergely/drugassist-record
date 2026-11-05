@@ -99,9 +99,9 @@ document.addEventListener('DOMContentLoaded', () => {
       wardsContainer.innerHTML = Object.entries(wardsGrouped).map(([wardName, recordsInWard]) => `
         <section class="card" style="margin-bottom: 2rem;">
           <div class="table-header" style="border-bottom: 2px solid #6f42c1; padding-bottom: 0.5rem; margin-bottom: 1rem;">
-            <h2 style="color: #593196; margin:0;">🏢 Osztály: ${wardName}</h2>
+            <h2 style="color: #593196; margin:0;">${wardName}</h2>
             <button type="button" onclick="generateWardPDF('${wardName}')" class="btn btn-success" style="background: #28a745;">
-              📄 Osztályos PDF Átadó Generálása
+              📄 Osztályos átadó
             </button>
           </div>
 
