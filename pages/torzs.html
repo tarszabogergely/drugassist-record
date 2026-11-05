@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DrugAssist Record - Gyógyszertörzs</title>
   <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* Keresősáv és Gomb egy sorba rendezése */
+    .search-action-bar {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    .search-action-bar .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+  </style>
 </head>
 <body>
 
@@ -20,16 +32,15 @@
   </header>
 
   <main class="container">
-    <!-- Keresés és Új Gyógyszer Kártya -->
-    <section class="card">
-      <div class="table-header" style="justify-content: flex-end; margin-bottom: 0.5rem;">
-        <button type="button" id="btn-open-add-modal" class="btn btn-success" style="background: #10b981; border-color: #059669;">+ Új Gyógyszer Felvétele</button>
-      </div>
-
-      <div class="patient-grid">
-        <div class="form-group" style="margin-bottom: 0;">
+    <!-- Keresés és Új Gyógyszer Kártya (Egy sorban) -->
+    <section class="card" style="padding: 1.25rem;">
+      <div class="search-action-bar">
+        <div class="form-group">
           <input type="text" id="torzs-search-input" placeholder="🔎Keresés" autofocus style="font-size: 1.05rem; padding: 0.75rem;">
         </div>
+        <button type="button" id="btn-open-add-modal" class="btn btn-success" style="background: #10b981; border-color: #059669; padding: 0.75rem 1.25rem; white-space: nowrap;">
+          + Új Gyógyszer Felvétele
+        </button>
       </div>
     </section>
 
