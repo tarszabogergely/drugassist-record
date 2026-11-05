@@ -39,27 +39,29 @@
       margin-top: 1rem;
     }
 
+    /* Fejléc Logóval */
     .header {
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .header h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--primary-hover);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
     }
 
-    .header p {
-      font-size: 0.875rem;
-      color: var(--text-muted);
-      margin-top: 0.25rem;
+    .header img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
     }
 
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--primary-hover);
+      letter-spacing: -0.02em;
+    }
+
+    /* Kereső doboz és találati lista */
     .search-wrapper {
       position: relative;
       margin-bottom: 1.5rem;
@@ -82,6 +84,7 @@
       box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
     }
 
+    /* Legördülő találati lista */
     .autocomplete-list {
       position: absolute;
       top: calc(100% + 6px);
@@ -114,6 +117,7 @@
       color: var(--primary);
     }
 
+    /* Eredmény Kártya (Egyetlen letisztult buborék) */
     .result-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -130,31 +134,17 @@
     }
 
     .result-title {
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       font-weight: 700;
       color: var(--primary-hover);
       margin-bottom: 0.75rem;
-      line-height: 1.3;
-    }
-
-    .morphology-badge {
-      display: inline-block;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      margin-bottom: 0.5rem;
+      line-height: 1.35;
     }
 
     .morphology-text {
       font-size: 1.05rem;
-      line-height: 1.5;
+      line-height: 1.6;
       color: var(--text-main);
-      background: #f1f5f9;
-      padding: 1rem;
-      border-radius: 8px;
-      border-left: 4px solid var(--primary);
     }
 
     .empty-state {
@@ -168,9 +158,10 @@
 <body>
 
   <div class="app-container">
+    <!-- Fejléc Logóval -->
     <div class="header">
-      <h1>💊 Gyógyszer Morfológia</h1>
-      <p>Kórházi Gyógyszertörzs Gyorskereső</p>
+      <img src="https://drugassist-record.netlify.app/drugassistlogo.png" alt="DrugAssist Logo">
+      <h1>DrugAssist</h1>
     </div>
 
     <!-- Kereső Mező -->
@@ -189,12 +180,11 @@
     <!-- Eredmény Kártya -->
     <div id="result-card" class="result-card">
       <div class="result-title" id="res-med-name">--</div>
-      <div class="morphology-badge">Morfológia (Alak, Szín, Felezővonal)</div>
       <div class="morphology-text" id="res-med-morphology">--</div>
     </div>
   </div>
 
-  <!-- Meglévő Supabase modulok betöltése a projektből -->
+  <!-- Supabase modulok betöltése -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/supabase-config.js"></script>
 
