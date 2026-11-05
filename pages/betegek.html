@@ -5,6 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DrugAssist Record - Betegek</title>
   <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .clickable-row {
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+    .clickable-row:hover {
+      background-color: #f0f9ff !important;
+    }
+    .patient-input-inline {
+      border: 1px solid transparent;
+      background: transparent;
+      font-size: 0.95rem;
+      padding: 0.25rem 0.4rem;
+      border-radius: 4px;
+      width: 100%;
+    }
+    .patient-input-inline:hover {
+      border-color: #cbd5e1;
+      background: #ffffff;
+    }
+    .patient-input-inline:focus {
+      outline: none;
+      border-color: #3b82f6;
+      background: #ffffff;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    .detail-dose-badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      background: #f1f5f9;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+  </style>
 </head>
 <body>
 
@@ -20,24 +55,17 @@
   </header>
 
   <main class="container">
-    <!-- Kereső és Szűrő Kártya -->
-    <section class="card">
-      <h2>Betegek Keresése & Szűrése</h2>
+    <!-- Letisztított Kereső Kártya -->
+    <section class="card" style="padding: 1.25rem;">
       <div class="patient-grid">
-        <div class="form-group">
-          <label for="patient-search-input">Keresés (Név, Osztály, Ágyszám vagy TAJ)</label>
-          <input type="text" id="patient-search-input" placeholder="Írja be a beteg nevét vagy osztályát..." autofocus>
+        <div class="form-group" style="margin-bottom: 0;">
+          <input type="text" id="patient-search-input" placeholder="🔎Keresés" autofocus style="font-size: 1.05rem; padding: 0.75rem;">
         </div>
       </div>
     </section>
 
     <!-- Beteglista Táblázat -->
     <section class="card">
-      <div class="table-header">
-        <h2>Rögzített Betegek Listája</h2>
-        <button type="button" id="btn-refresh-patients" class="btn btn-secondary btn-sm">Frissítés</button>
-      </div>
-
       <div class="table-wrapper">
         <table class="data-table">
           <thead>
@@ -60,9 +88,9 @@
     </section>
   </main>
 
-  <!-- Modal: Beteg Gyógyszerelési Előzményei -->
+  <!-- Modal 1: Beteg Gyógyszerelési Előzményei -->
   <div id="patient-history-modal" class="modal">
-    <div class="modal-content" style="max-width: 850px; width: 95%;">
+    <div class="modal-content" style="max-width: 900px; width: 95%;">
       <div class="modal-header">
         <h3 style="margin:0;">Beteg Előzményei: <span id="h-patient-name">--</span></h3>
         <span class="close-modal" id="btn-close-history-modal" style="cursor:pointer; font-size: 1.8rem;">&times;</span>
@@ -74,6 +102,7 @@
             <thead>
               <tr>
                 <th>Rögzítés Ideje</th>
+                <th>Gyártási Azonosító</th>
                 <th>Osztály / Ágy</th>
                 <th>Státusz</th>
                 <th>Megjegyzés</th>
@@ -81,7 +110,47 @@
             </thead>
             <tbody id="patient-history-body">
               <tr class="empty-row">
-                <td colspan="4">Keresés...</td>
+                <td colspan="5">Keresés...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Tálca Részletes Adagolása (Archívum stílusú) -->
+  <div id="tray-detail-modal" class="modal">
+    <div class="modal-content" style="max-width: 800px; width: 95%;">
+      <div class="modal-header">
+        <h3 style="margin:0;">Tálca Részletei (<span id="detail-patient">--</span>)</h3>
+        <span class="close-modal" id="btn-close-detail-modal" style="cursor:pointer; font-size: 1.8rem;">&times;</span>
+      </div>
+
+      <div class="modal-body" style="padding: 1.5rem;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; font-size: 0.9rem;">
+          <div><strong>Gyártási azonosító:</strong> <span id="detail-barcode">-</span></div>
+          <div><strong>Rögzítette:</strong> <span id="detail-user">-</span></div>
+          <div><strong>Státusz:</strong> <span id="detail-status">-</span></div>
+        </div>
+
+        <h4 style="margin-bottom: 0.5rem; color: #1e293b;">Kiadott Gyógyszerek</h4>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Gyógyszer Neve</th>
+                <th>Morfológia</th>
+                <th>Gyári szám (LOT) / Lejárat</th>
+                <th>Reggel</th>
+                <th>Délben</th>
+                <th>Este</th>
+                <th>Éjjel</th>
+              </tr>
+            </thead>
+            <tbody id="detail-items-body">
+              <tr class="empty-row">
+                <td colspan="7">Betöltés folyamatban...</td>
               </tr>
             </tbody>
           </table>
