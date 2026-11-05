@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         wardsGrouped[wName].push(r);
       });
 
-      // HTML felépítése (Gyógyszerelési azonosító a Státusz elé helyezve)
+      // HTML felépítése
       wardsContainer.innerHTML = Object.entries(wardsGrouped).map(([wardName, recordsInWard]) => `
         <section class="card" style="margin-bottom: 2rem;">
           <div class="table-header" style="border-bottom: 2px solid #6f42c1; padding-bottom: 0.5rem; margin-bottom: 1rem;">
@@ -210,100 +210,139 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 4. OSZTÁLYOS PDF ÁTADÓ GENERÁLÁSA
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && historyModal && historyModal.style.display === 'flex') {
+      historyModal.style.display = 'none';
+    }
+  });
+
+  // 4. OSZTÁLYOS PDF ÁTADÓ GENERÁLÁSA (Logóval, középfejléccel & formázott beteg sorokkal)
   window.generateWardPDF = async function(wardName) {
     const wardRecords = dayRecords.filter(r => (r.ward || 'Egyéb Osztály') === wardName);
     if (wardRecords.length === 0) return;
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    // Logó kép betöltése és Base64 konvertálása
+    const logoUrl = 'https://drugassist-record.netlify.app/drugassistlogo.png';
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.src = logoUrl;
 
-    // FEJLÉC
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.text("DrugAssist", 14, 15);
-    doc.setFont("helvetica", "normal");
-    doc.text("Markusovszky Kórház", 14, 20);
+    img.onload = async function () {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const imgData = canvas.toDataURL('image/png');
 
-    doc.setFontSize(10);
-    doc.text(`Dátum: ${selectedDateStr}`, 196, 15, { align: 'right' });
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
 
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text(`Osztály: ${wardName}`, 14, 32);
+      // FEJLÉC (Logó + Szövegek)
+      doc.addImage(imgData, 'PNG', 14, 10, 16, 16);
 
-    doc.setLineWidth(0.5);
-    doc.line(14, 35, 196, 35);
-
-    let startY = 42;
-
-    for (const rec of wardRecords) {
-      const trayId = extractTrayId(rec.qr_identifier);
-      doc.setFontSize(10.5);
+      doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      const pHeader = `Azonosító: ${trayId} | Beteg: ${rec.patient_name} | TAJ: ${rec.patient_taj || 'Nincs'} | Ágy: ${rec.bed_number || '-'}`;
-      doc.text(pHeader, 14, startY);
-      startY += 5;
+      doc.text("DrugAssist", 33, 16);
 
-      const { data: items } = await db
-        .from('dispensed_items')
-        .select(`
-          morning_dose, noon_dose, evening_dose, night_dose,
-          medication_master ( name ),
-          batch_records ( lot_number, expiry_date )
-        `)
-        .eq('dispensing_record_id', rec.id);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.text("Markusovszky Kórház Gyógyszertár", 33, 23);
 
-      const tableRows = (items || []).map(it => {
-        const batch = it.batch_records;
-        const lotStr = batch ? batch.lot_number : '-';
-        const expStr = batch ? batch.expiry_date : '-';
-        const doseStr = `${it.morning_dose} - ${it.noon_dose} - ${it.evening_dose} - ${it.night_dose}`;
+      // KÖZÉPRE ZÁRT OSZTÁLY NÉV ÉS DÁTUM ALATTA
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Osztály: ${wardName}`, 105, 34, { align: 'center' });
 
-        return [
-          it.medication_master?.name || 'Gyógyszer',
-          doseStr,
-          lotStr,
-          expStr
-        ];
-      });
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Dátum: ${selectedDateStr}`, 105, 40, { align: 'center' });
 
-      doc.autoTable({
-        startY: startY,
-        head: [['Gyógyszer neve', 'Adagolás (R - D - E - É)', 'Gyári szám (LOT)', 'Lejárat']],
-        body: tableRows.length > 0 ? tableRows : [['Nincs rögzített gyógyszer', '-', '-', '-']],
-        theme: 'grid',
-        headStyles: { fillColor: [111, 66, 193], textColor: 255, fontSize: 9 },
-        bodyStyles: { fontSize: 8.5 },
-        margin: { left: 14, right: 14 }
-      });
+      // VÁLASZTÓVONAL
+      doc.setLineWidth(0.5);
+      doc.line(14, 44, 196, 44);
 
-      startY = doc.lastAutoTable.finalY + 8;
+      let startY = 52;
 
-      if (startY > 230) {
-        doc.addPage();
-        startY = 20;
+      for (const rec of wardRecords) {
+        const trayId = extractTrayId(rec.qr_identifier);
+        
+        // Beteg sor felépítése vegyes betűtípussal (Félkövér + Normál az azonosítónak)
+        doc.setFontSize(10);
+        
+        // 1. Félkövér rész: Beteg, TAJ, Ágy
+        doc.setFont("helvetica", "bold");
+        const boldText = `Beteg: ${rec.patient_name} | TAJ: ${rec.patient_taj || 'Nincs'} | Ágy: ${rec.bed_number || '-'} | `;
+        doc.text(boldText, 14, startY);
+
+        // 2. Normál rész: Azonosító (X pozíció kiszámításával)
+        const boldWidth = doc.getTextWidth(boldText);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Azonosító: ${trayId}`, 14 + boldWidth, startY);
+
+        startY += 5;
+
+        // Tételek lekérdezése
+        const { data: items } = await db
+          .from('dispensed_items')
+          .select(`
+            morning_dose, noon_dose, evening_dose, night_dose,
+            medication_master ( name ),
+            batch_records ( lot_number, expiry_date )
+          `)
+          .eq('dispensing_record_id', rec.id);
+
+        const tableRows = (items || []).map(it => {
+          const batch = it.batch_records;
+          const lotStr = batch ? batch.lot_number : '-';
+          const expStr = batch ? batch.expiry_date : '-';
+          const doseStr = `${it.morning_dose} - ${it.noon_dose} - ${it.evening_dose} - ${it.night_dose}`;
+
+          return [
+            it.medication_master?.name || 'Gyógyszer',
+            doseStr,
+            lotStr,
+            expStr
+          ];
+        });
+
+        doc.autoTable({
+          startY: startY,
+          head: [['Gyógyszer neve', 'Adagolás (R - D - E - É)', 'Gyári szám (LOT)', 'Lejárat']],
+          body: tableRows.length > 0 ? tableRows : [['Nincs rögzített gyógyszer', '-', '-', '-']],
+          theme: 'grid',
+          headStyles: { fillColor: [111, 66, 193], textColor: 255, fontSize: 9 },
+          bodyStyles: { fontSize: 8.5 },
+          margin: { left: 14, right: 14 }
+        });
+
+        startY = doc.lastAutoTable.finalY + 8;
+
+        if (startY > 230) {
+          doc.addPage();
+          startY = 20;
+        }
       }
-    }
 
-    // ALÁÍRÁSOK
-    const pageCount = doc.internal.getNumberOfPages();
-    doc.setPage(pageCount);
+      // ALÁÍRÁSOK
+      const pageCount = doc.internal.getNumberOfPages();
+      doc.setPage(pageCount);
 
-    const footerY = 270;
-    doc.setLineWidth(0.3);
+      const footerY = 270;
+      doc.setLineWidth(0.3);
 
-    doc.line(14, footerY, 65, footerY);
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.text("Átadta (Gyógyszertár)", 39, footerY + 5, { align: 'center' });
+      doc.line(14, footerY, 65, footerY);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text("Átadta (Gyógyszertár)", 39, footerY + 5, { align: 'center' });
 
-    doc.line(77, footerY, 128, footerY);
-    doc.text("Átvette (Osztály)", 102.5, footerY + 5, { align: 'center' });
+      doc.line(77, footerY, 128, footerY);
+      doc.text("Átvette (Osztály)", 102.5, footerY + 5, { align: 'center' });
 
-    doc.line(140, footerY, 191, footerY);
-    doc.text("Ellenörizte (Osztály)", 165, footerY + 5, { align: 'center' });
+      doc.line(140, footerY, 191, footerY);
+      doc.text("Ellenörizte (Osztály)", 165, footerY + 5, { align: 'center' });
 
-    doc.save(`DrugAssist_Atado_${wardName}_${selectedDateStr}.pdf`);
+      doc.save(`DrugAssist_Atado_${wardName}_${selectedDateStr}.pdf`);
+    };
   };
 });
