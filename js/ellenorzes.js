@@ -43,7 +43,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function loadPendingTrays() {
     try {
-      pendingWardsContainer.innerHTML = '<div class="card"><p class="empty-row">Betöltés folyamatban...</p></div>';
+      if (pendingWardsContainer) {
+        pendingWardsContainer.innerHTML = '<div class="card"><p class="empty-row">Betöltés folyamatban...</p></div>';
+      }
 
       const { data: records, error } = await db
         .from('dispensing_records')
@@ -55,6 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (error) throw error;
 
       pendingRecords = records || [];
+
+      if (!pendingWardsContainer) return;
 
       if (pendingRecords.length === 0) {
         pendingWardsContainer.innerHTML = '<div class="card"><p class="empty-row">Nincs ellenőrzésre váró tálca.</p></div>';
@@ -107,7 +111,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error('Lista betöltési hiba:', err);
-      pendingWardsContainer.innerHTML = '<div class="card"><p class="empty-row" style="color:red;">Hiba történt a tálcák betöltésekor.</p></div>';
+      if (pendingWardsContainer) {
+        pendingWardsContainer.innerHTML = '<div class="card"><p class="empty-row" style="color:red;">Hiba történt a tálcák betöltésekor.</p></div>';
+      }
     }
   }
 
