@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (wardRecords.length === 0) return;
 
     // Logó kép betöltése és Base64 konvertálása
-    const logoUrl = 'https://drugassist-record.netlify.app/drugassistlogo.png';
+    const logoUrl = 'https://drugassist-record.netlify.app/drugassistlogo_feher.png';
     const img = new Image();
     img.crossOrigin = 'Anonymous';
     img.src = logoUrl;
@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // KÖZÉPRE ZÁRT OSZTÁLY NÉV ÉS DÁTUM ALATTA
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      doc.text(`Osztály: ${wardName}`, 105, 34, { align: 'center' });
+      doc.text(`${wardName}`, 105, 34, { align: 'center' });
 
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
@@ -272,13 +272,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 1. Félkövér rész: Beteg, TAJ, Ágy
         doc.setFont("helvetica", "bold");
-        const boldText = `Beteg: ${rec.patient_name} | TAJ: ${rec.patient_taj || 'Nincs'} | Ágy: ${rec.bed_number || '-'} | `;
+        const boldText = `Beteg: ${rec.patient_name} | TAJ: ${rec.patient_taj || 'Nincs'} | Ágy: ${rec.bed_number || '-'} `;
         doc.text(boldText, 14, startY);
 
         // 2. Normál rész: Azonosító (X pozíció kiszámításával)
         const boldWidth = doc.getTextWidth(boldText);
         doc.setFont("helvetica", "normal");
-        doc.text(`Azonosító: ${trayId}`, 14 + boldWidth, startY);
+        doc.text(`| Azonosító: ${trayId}`, 14 + boldWidth, startY);
 
         startY += 5;
 
