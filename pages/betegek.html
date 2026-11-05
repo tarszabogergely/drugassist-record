@@ -13,24 +13,6 @@
     .clickable-row:hover {
       background-color: #f0f9ff !important;
     }
-    .patient-input-inline {
-      border: 1px solid transparent;
-      background: transparent;
-      font-size: 0.95rem;
-      padding: 0.25rem 0.4rem;
-      border-radius: 4px;
-      width: 100%;
-    }
-    .patient-input-inline:hover {
-      border-color: #cbd5e1;
-      background: #ffffff;
-    }
-    .patient-input-inline:focus {
-      outline: none;
-      border-color: #3b82f6;
-      background: #ffffff;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-    }
     .detail-dose-badge {
       display: inline-block;
       padding: 0.2rem 0.5rem;
@@ -88,7 +70,38 @@
     </section>
   </main>
 
-  <!-- Modal 1: Beteg Gyógyszerelési Előzményei -->
+  <!-- Modal 1: Betegadatok Szerkesztése -->
+  <div id="patient-edit-modal" class="modal">
+    <div class="modal-content" style="max-width: 500px; width: 95%;">
+      <div class="modal-header">
+        <h3 style="margin:0;">Betegadatok Szerkesztése</h3>
+        <span class="close-modal" id="btn-close-edit-modal" style="cursor:pointer; font-size: 1.8rem;">&times;</span>
+      </div>
+
+      <form id="edit-patient-form">
+        <div class="modal-body" style="padding: 1.5rem;">
+          <input type="hidden" id="edit-patient-id">
+
+          <div class="form-group">
+            <label for="edit-patient-name" style="font-weight: 600;">Beteg Neve</label>
+            <input type="text" id="edit-patient-name" required placeholder="Pl.: Kovács János" style="font-size: 1rem; padding: 0.6rem;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="edit-patient-taj" style="font-weight: 600;">TAJ Szám</label>
+            <input type="text" id="edit-patient-taj" placeholder="Pl.: 123 456 789" style="font-size: 1rem; padding: 0.6rem;">
+          </div>
+        </div>
+
+        <div class="modal-footer" style="padding: 1rem 1.5rem; display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid #e2e8f0;">
+          <button type="button" id="btn-cancel-edit-patient" class="btn btn-secondary">Mégse</button>
+          <button type="submit" class="btn btn-primary" style="background: #3b82f6; border-color: #2563eb;">Mentés</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Beteg Gyógyszerelési Előzményei -->
   <div id="patient-history-modal" class="modal">
     <div class="modal-content" style="max-width: 900px; width: 95%;">
       <div class="modal-header">
@@ -119,7 +132,7 @@
     </div>
   </div>
 
-  <!-- Modal 2: Tálca Részletes Adagolása (Archívum stílusú) -->
+  <!-- Modal 3: Tálca Részletes Adagolása -->
   <div id="tray-detail-modal" class="modal">
     <div class="modal-content" style="max-width: 800px; width: 95%;">
       <div class="modal-header">
