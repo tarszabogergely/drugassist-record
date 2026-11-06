@@ -87,10 +87,10 @@
 </head>
 <body class="flex justify-end items-stretch p-2 sm:p-3 h-screen">
 
-    <!-- MUNKASÁV (Jobb oldalra igazított, alacsonyabb kártya) -->
+    <!-- MUNKASÁV (Jobb oldalra igazított kártya) -->
     <div class="w-full max-w-sm bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col h-full no-print">
         
-        <!-- Fejléc (Kompaktabb) -->
+        <!-- Fejléc -->
         <div class="px-4 py-2.5 bg-slate-900 text-white shrink-0">
             <div class="flex items-center space-x-2.5">
                 <div class="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white shrink-0">
@@ -107,16 +107,21 @@
             </div>
         </div>
 
-        <!-- Űrlap (Helytakarékos beosztással) -->
+        <!-- Űrlap -->
         <div class="px-4 py-2.5 flex-1 overflow-y-auto custom-scrollbar space-y-2">
             <div>
-                <label class="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Beteg Neve</label>
+                <label class="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">1. Beteg Neve</label>
                 <input type="text" id="patientName" placeholder="pl. Kovács János" class="bubble-input" autocomplete="off">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">2. TAJ szám</label>
+                <input type="text" id="tajNum" placeholder="pl. 123 456 789" class="bubble-input" autocomplete="off">
             </div>
 
             <div class="grid grid-cols-2 gap-2">
                 <div>
-                    <label class="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Osztály</label>
+                    <label class="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">3. Osztály</label>
                     <select id="deptName" class="bubble-select">
                         <option value="Fül-orr-gégészet">Fül-orr-gégészet</option>
                         <option value="Gasztroenterológia">Gasztroenterológia</option>
@@ -125,36 +130,27 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Ágyszám</label>
+                    <label class="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">4. Ágyszám</label>
                     <input type="text" id="bedNum" placeholder="pl. 12/A" class="bubble-input" autocomplete="off">
                 </div>
             </div>
 
-            <hr class="border-slate-100 my-1">
-
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Készítette</label>
-                    <select id="preparedBy" class="bubble-select">
-                        <option value="Asszisztens 1">Asszisztens 1</option>
-                        <option value="Asszisztens 2">Asszisztens 2</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Ellenőrizte</label>
-                    <select id="checkedBy" class="bubble-select">
-                        <option value="Gyógyszerész 1">Gyógyszerész 1</option>
-                        <option value="Gyógyszerész 2">Gyógyszerész 2</option>
-                    </select>
-                </div>
-            </div>
-
             <div>
-                <label class="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Dátum</label>
+                <label class="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">5. Dátum</label>
                 <input type="date" id="labelDate" class="bubble-input">
             </div>
 
-            <!-- Mini Előnézet (Lecsökkentett méret a görgetés megelőzésére) -->
+            <hr class="border-slate-100 my-1">
+
+            <div>
+                <label class="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Jóváhagyta</label>
+                <select id="approvedBy" class="bubble-select">
+                    <option value="Gyógyszerész 1">Gyógyszerész 1</option>
+                    <option value="Gyógyszerész 2">Gyógyszerész 2</option>
+                </select>
+            </div>
+
+            <!-- Mini Előnézet -->
             <div class="mt-2 pt-2 border-t border-slate-200">
                 <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Előnézet (10×7.5 cm)</span>
                 
@@ -166,6 +162,7 @@
                     <div class="my-auto flex justify-between items-center px-1">
                         <div class="space-y-0.5 text-[11px] leading-tight">
                             <div class="truncate font-extrabold text-black"><span id="prevName">-</span></div>
+                            <div class="truncate text-slate-700 font-semibold"><span id="prevTaj">-</span></div>
                             <div class="truncate"><span id="prevDept">-</span></div>
                             <div class="truncate"><span id="prevBed">-</span></div>
                             <div class="truncate font-semibold text-slate-700 pt-0.5"><span id="prevDate">-</span></div>
@@ -177,8 +174,7 @@
 
                     <div class="border-t border-slate-900/10 pt-0.5 text-[8px] text-slate-700 font-medium">
                         <div class="flex justify-between">
-                            <span id="prevPrep">Készítette: -</span>
-                            <span id="prevCheck">Ellenőrizte: -</span>
+                            <span id="prevApprove">Jóváhagyta: -</span>
                         </div>
                         <div class="text-center text-[7px] font-mono text-slate-400">
                             Azonosító: <span id="prevID">-</span>
@@ -201,7 +197,7 @@
         </div>
     </div>
 
-    <!-- NYOMTATÁSI STRUKTÚRA (Csak nyomtatáskor látszik) -->
+    <!-- NYOMTATÁSI STRUKTÚRA (100mm x 75mm) -->
     <div class="print-only-label">
         <div style="font-size: 11pt; font-weight: 800; text-align: center; border-bottom: 1.5pt solid #000; padding-bottom: 2mm; margin-bottom: 4mm; text-transform: uppercase;">
             Markusovszky Kórház Gyógyszertár
@@ -209,16 +205,24 @@
         
         <div style="display: flex; justify-content: space-between; align-items: flex-start; min-height: 38mm;">
             <div style="width: 60%;">
-                <div style="font-size: 16pt; font-weight: 800; margin-bottom: 2.5mm; line-height: 1.2;">
+                <!-- Beteg Neve -->
+                <div style="font-size: 16pt; font-weight: 800; margin-bottom: 2mm; line-height: 1.2;">
                     <span id="printName"></span>
                 </div>
+                <!-- TAJ szám -->
+                <div style="font-size: 13pt; font-weight: 700; margin-bottom: 2mm;">
+                    <span id="printTaj"></span>
+                </div>
+                <!-- Osztály -->
                 <div style="font-size: 13pt; margin-bottom: 2mm;">
                     <span id="printDept"></span>
                 </div>
+                <!-- Ágyszám -->
                 <div style="font-size: 13pt; margin-bottom: 2mm;">
                     <span id="printBed"></span>
                 </div>
-                <div style="font-size: 13pt; font-weight: 600; margin-top: 3mm;">
+                <!-- Dátum -->
+                <div style="font-size: 13pt; font-weight: 600; margin-top: 2.5mm;">
                     <span id="printDate"></span>
                 </div>
             </div>
@@ -228,9 +232,9 @@
             </div>
         </div>
         
+        <!-- Alsó infók: Jóváhagyta + középen az azonosító -->
         <div style="position: absolute; bottom: 3mm; left: 5mm; right: 5mm; border-top: 1pt solid #000; padding-top: 2mm; font-size: 9.5pt; font-weight: 600; line-height: 1.35;">
-            <div>Készítette: <span id="printPrep"></span></div>
-            <div>Ellenőrizte: <span id="printCheck"></span></div>
+            <div>Jóváhagyta: <span id="printApprove"></span></div>
             <div style="text-align: center; font-size: 9pt; font-family: monospace; margin-top: 2mm; font-weight: bold;">
                 Azonosító: <span id="printID"></span>
             </div>
@@ -239,11 +243,11 @@
 
     <script>
         const patientNameInput = document.getElementById('patientName');
+        const tajNumInput = document.getElementById('tajNum');
         const deptNameSelect = document.getElementById('deptName');
         const bedNumInput = document.getElementById('bedNum');
-        const preparedBySelect = document.getElementById('preparedBy');
-        const checkedBySelect = document.getElementById('checkedBy');
         const labelDateInput = document.getElementById('labelDate');
+        const approvedBySelect = document.getElementById('approvedBy');
 
         let currentBarcodeID = '';
         let qrPreviewObj = null;
@@ -274,10 +278,12 @@
         function updateQR() {
             try {
                 const nameVal = patientNameInput.value.trim() || '-';
+                const tajVal = tajNumInput.value.trim() || '-';
                 const deptVal = deptNameSelect.value.trim() || '-';
                 const bedVal = bedNumInput.value.trim() || '-';
                 
-                const rawQrText = `${nameVal}??${deptVal}??${bedVal}??${currentBarcodeID}`;
+                // Formátum: Betegnév??TAJ??Osztály??Ágyszám??Egyedi azonosító
+                const rawQrText = `${nameVal}??${tajVal}??${deptVal}??${bedVal}??${currentBarcodeID}`;
                 const utfText = toUTF8(rawQrText);
 
                 if (typeof QRious !== 'undefined') {
@@ -311,32 +317,36 @@
 
         function updatePreviews() {
             const nameVal = patientNameInput.value.trim();
+            const tajVal = tajNumInput.value.trim();
             const deptVal = deptNameSelect.value;
             const bedVal = bedNumInput.value.trim();
-            const prepVal = preparedBySelect.value;
-            const checkVal = checkedBySelect.value;
             const dateVal = labelDateInput.value;
+            const approveVal = approvedBySelect.value;
 
             document.getElementById('prevName').textContent = nameVal || '-';
+            document.getElementById('prevTaj').textContent = tajVal ? 'TAJ: ' + tajVal : '-';
             document.getElementById('prevDept').textContent = deptVal || '-';
             document.getElementById('prevBed').textContent = bedVal || '-';
             document.getElementById('prevDate').textContent = dateVal || '-';
-            document.getElementById('prevPrep').textContent = 'Készítette: ' + prepVal;
-            document.getElementById('prevCheck').textContent = 'Ellenőrizte: ' + checkVal;
+            document.getElementById('prevApprove').textContent = 'Jóváhagyta: ' + approveVal;
 
             document.getElementById('printName').textContent = nameVal;
+            document.getElementById('printTaj').textContent = tajVal;
             document.getElementById('printDept').textContent = deptVal;
             document.getElementById('printBed').textContent = bedVal;
             document.getElementById('printDate').textContent = dateVal;
-            document.getElementById('printPrep').textContent = prepVal;
-            document.getElementById('printCheck').textContent = checkVal;
+            document.getElementById('printApprove').textContent = approveVal;
 
             updateQR();
         }
 
         function resetForm() {
+            // Törli: Név, TAJ szám, Ágyszám
             patientNameInput.value = '';
+            tajNumInput.value = '';
             bedNumInput.value = '';
+            
+            // Marad: Osztály, Dátum, Gyógyszerész (Jóváhagyta)
             generateUniqueID();
             updatePreviews();
             patientNameInput.focus();
@@ -347,7 +357,7 @@
             window.print();
         }
 
-        [patientNameInput, deptNameSelect, bedNumInput, preparedBySelect, checkedBySelect, labelDateInput].forEach(el => {
+        [patientNameInput, tajNumInput, deptNameSelect, bedNumInput, labelDateInput, approvedBySelect].forEach(el => {
             el.addEventListener('input', updatePreviews);
             el.addEventListener('change', updatePreviews);
         });
