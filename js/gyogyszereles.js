@@ -53,7 +53,17 @@ document.addEventListener('DOMContentLoaded', () => {
     userDisp.innerText = `${currentUser.full_name} (${currentUser.role === 'pharmacist' ? 'Gyógyszerész' : 'Asszisztens'})`;
   }
 
-  // 2. QR kód beolvasása & feldolgozása
+  // Karakterkódolási hiba javító segédfunkció
+  function fixUtf8Encoding(str) {
+    if (!str) return str;
+    try {
+      return decodeURIComponent(escape(str));
+    } catch (e) {
+      return str;
+    }
+  }
+
+  // 2. QR kód beolvasása & feldolgozása (4 és 5 elemes formátum támogatása)
   if (btnParseQr) btnParseQr.addEventListener('click', parsePatientQr);
   if (qrInput) {
     qrInput.addEventListener('keypress', (e) => {
@@ -70,17 +80,33 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const parts = rawVal.split('??');
-    currentPatient = {
-      name: parts[0] ? parts[0].trim() : 'Névtelen Beteg',
-      ward: parts[1] ? parts[1].trim() : 'Ismeretlen Osztály',
-      bed: parts[2] ? parts[2].trim() : '-',
-      timestamp: parts[3] ? parts[3].trim() : new Date().toISOString(),
-      rawQr: rawVal
-    };
+    const cleanQr = fixUtf8Encoding(rawVal);
+    const parts = cleanQr.split('??').map(p => p.trim());
+
+    if (parts.length === 4) {
+      // Régi formátum: Név??Osztály??Ágyszám??Azonosító
+      currentPatient = {
+        name: parts[0] || 'Névtelen Beteg',
+        taj: null,
+        ward: parts[1] || 'Ismeretlen Osztály',
+        bed: parts[2] || '-',
+        timestamp: parts[3] || new Date().toISOString(),
+        rawQr: rawVal
+      };
+    } else if (parts.length >= 5) {
+      // Új formátum: Név??TAJ??Osztály??Ágyszám??Azonosító
+      currentPatient = {
+        name: parts[0] || 'Névtelen Beteg',
+        taj: parts[1] || null,
+        ward: parts[2] || 'Ismeretlen Osztály',
+        bed: parts[3] || '-',
+        timestamp: parts[4] || new Date().toISOString(),
+        rawQr: rawVal
+      };
+    }
 
     if (pName) pName.innerText = currentPatient.name;
-    if (pTaj) pTaj.innerText = 'Lekérdezés...';
+    if (pTaj) pTaj.innerText = currentPatient.taj || 'Lekérdezés...';
     if (pWard) pWard.innerText = currentPatient.ward;
     if (pBed) pBed.innerText = currentPatient.bed;
     if (pTime) pTime.innerText = currentPatient.timestamp;
@@ -100,19 +126,28 @@ document.addEventListener('DOMContentLoaded', () => {
         .maybeSingle();
 
       if (existingPatient) {
-        if (pTaj) pTaj.innerText = existingPatient.taj_number || '-';
-        currentPatient.taj = existingPatient.taj_number;
+        // Ha van TAJ a QR-ban, azt használjuk, egyébként az adatbázisban meglévőt
+        const tajToUse = patientObj.taj || existingPatient.taj_number || '-';
+        if (pTaj) pTaj.innerText = tajToUse;
+        currentPatient.taj = tajToUse !== '-' ? tajToUse : null;
+
+        // Ha az adatbázisban még nem volt TAJ, de a QR-ban van, frissítjük
+        if (!existingPatient.taj_number && patientObj.taj) {
+          await db.from('patients').update({ taj_number: patientObj.taj }).eq('id', existingPatient.id);
+        }
       } else {
-        if (pTaj) pTaj.innerText = 'Új beteg';
+        // Új beteg felvétele TAJ számmal együtt
+        if (pTaj) pTaj.innerText = patientObj.taj || 'Új beteg (Nincs TAJ)';
         await db.from('patients').insert([{
           name: patientObj.name,
+          taj_number: patientObj.taj || null,
           ward: patientObj.ward,
           bed_number: patientObj.bed
         }]);
       }
     } catch (err) {
-      console.error('Beteg lekérdezési hiba:', err);
-      if (pTaj) pTaj.innerText = '-';
+      console.error('Beteg lekérdezési / mentési hiba:', err);
+      if (pTaj && !currentPatient.taj) pTaj.innerText = '-';
     }
   }
 
@@ -122,27 +157,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.addEventListener('keydown', (e) => {
-    // MODALBÓL KILÉPÉS ESC-EL
     if (e.key === 'Escape') {
       if (scanModal && scanModal.style.display === 'flex') {
         scanModal.style.display = 'none';
       }
     } 
-    // LEZÁRÁS GYORSGOMB: CTRL + ENTER
     else if (e.ctrlKey && e.key === 'Enter') {
       e.preventDefault();
       if (btnSaveDispensing && !btnSaveDispensing.disabled) {
         btnSaveDispensing.click();
       }
     }
-    // "+" GYORSGOMB: GYÓGYSZER HOZZÁADÁSA MODAL NYITÁSA (+ vagy Numpad +)
     else if ((e.key === '+' || e.code === 'NumpadAdd') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
       e.preventDefault();
       if (btnOpenScanner && !btnOpenScanner.disabled) {
         openScanModal();
       }
     }
-    // F3 GYORSGOMB: TÉTEL HOZZÁADÁSA A TÁLCÁHOZ A MODALBAN
     else if (e.key === 'F3') {
       e.preventDefault();
       if (scanModal && scanModal.style.display === 'flex' && btnAddItem && !btnAddItem.classList.contains('hidden')) {
