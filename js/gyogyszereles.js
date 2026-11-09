@@ -126,17 +126,14 @@ document.addEventListener('DOMContentLoaded', () => {
         .maybeSingle();
 
       if (existingPatient) {
-        // Ha van TAJ a QR-ban, azt használjuk, egyébként az adatbázisban meglévőt
         const tajToUse = patientObj.taj || existingPatient.taj_number || '-';
         if (pTaj) pTaj.innerText = tajToUse;
         currentPatient.taj = tajToUse !== '-' ? tajToUse : null;
 
-        // Ha az adatbázisban még nem volt TAJ, de a QR-ban van, frissítjük
         if (!existingPatient.taj_number && patientObj.taj) {
           await db.from('patients').update({ taj_number: patientObj.taj }).eq('id', existingPatient.id);
         }
       } else {
-        // Új beteg felvétele TAJ számmal együtt
         if (pTaj) pTaj.innerText = patientObj.taj || 'Új beteg (Nincs TAJ)';
         await db.from('patients').insert([{
           name: patientObj.name,
@@ -270,6 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }).join('');
     }
 
+    // Eseménykezelők a LOT buborékokra
     document.querySelectorAll('.lot-bubble').forEach(btn => {
       btn.addEventListener('click', () => {
         const selectedId = btn.getAttribute('data-batch-id');
@@ -292,6 +290,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     });
+
+    // AMIKOR PONTOSAN 1 DB LOT RECORD LÉTEZIK: AUTOMATIKUS KIJELÖLÉS ÉS KITÖLTÉS
+    if (batches.length === 1) {
+      const singleBatch = batches[0];
+      const singleBubble = document.querySelector(`.lot-bubble[data-batch-id="${singleBatch.id}"]`);
+      if (singleBubble) {
+        singleBubble.classList.add('selected');
+      }
+      if (lotSelect) lotSelect.value = singleBatch.id;
+      if (newLotNumber) newLotNumber.value = singleBatch.lot_number;
+      if (newExpiryDate) newExpiryDate.value = singleBatch.expiry_date;
+    }
   }
 
   // 5. Gyógyszer Hozzáadása a Tálcához (AddItem)
