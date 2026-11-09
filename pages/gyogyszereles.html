@@ -204,7 +204,6 @@
     <section class="card">
       <h2>Megjegyzés</h2>
       <div class="summary-section" style="padding-top: 0.25rem;">
-        <!-- 1. TÖRÖLT CÍMKE: Nincs felette label szöveg -->
         <div class="form-group" style="margin-bottom: 1.75rem;">
           <textarea id="dispensing-notes" rows="2" placeholder="Opcionális megjegyzés a tálcához (pl. szilárd adagolási forma felezve)..." style="background: white; border-radius: 8px; border: 1px solid #cbd5e1;"></textarea>
         </div>
@@ -225,7 +224,7 @@
       </div>
 
       <div class="modal-body" style="padding: 1.5rem;">
-        <div class="form-group">
+        <div class="form-group" style="margin-bottom: 0;">
           <label for="barcode-input">Gyógyszer Vonalkódja</label>
           <input type="text" id="barcode-input" placeholder="Olvassa be a gyógyszer vonalkódját...">
         </div>
@@ -233,6 +232,9 @@
         <!-- Részletek a beolvasás után -->
         <div id="med-scanned-details" class="hidden">
           
+          <!-- PONTOZOTT VÁLASZTÓVONAL A VONALKÓD MEZŐ ALATT -->
+          <hr class="dotted-divider">
+
           <div class="modal-med-header">
             <h4 id="scanned-med-name">--</h4>
             <p style="margin:0; font-size: 0.95rem; color: #475569;">
