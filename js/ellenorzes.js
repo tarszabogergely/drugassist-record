@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         wardsGrouped[wName].push(r);
       });
 
-      // Csoportosított táblázatok kirajzolása (Osztály oszlop nélkül)
+      // Csoportosított táblázatok kirajzolása
       pendingWardsContainer.innerHTML = Object.entries(wardsGrouped).map(([wardName, recordsInWard]) => `
         <section class="card" style="margin-bottom: 1.5rem;">
           <div class="table-header" style="border-bottom: 2px solid #10b981; padding-bottom: 0.5rem; margin-bottom: 1rem;">
@@ -197,7 +197,9 @@ document.addEventListener('DOMContentLoaded', () => {
         verifyItemsBody.innerHTML = items.map(it => {
           const med = it.medication_master || {};
           const batch = it.batch_records;
-          const lotText = batch ? `${batch.lot_number} (Lejárat: ${batch.expiry_date})` : 'Nincs megadva';
+          
+          // FRISSÍTETT FORMÁTUM: Gyári szám felül, alatta a dátum "Lejárat:" felirat nélkül
+          const lotText = batch ? `<code>${batch.lot_number}</code><br><small style="color:#64748b;">${batch.expiry_date}</small>` : 'Nincs megadva';
 
           return `
             <tr>
