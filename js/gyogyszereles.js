@@ -240,7 +240,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
           if (medScannedDetails) medScannedDetails.classList.remove('hidden');
           if (btnAddItem) btnAddItem.classList.remove('hidden');
-          if (newLotNumber) newLotNumber.focus();
+          
+          // FÓKUSZ APPLIKÁLÁSA: Mindig a Reggel mező kapja a fókuszt!
+          setTimeout(() => {
+            if (doseMorning) {
+              doseMorning.focus();
+              doseMorning.select();
+            }
+          }, 50);
+
         } catch (err) {
           console.error('Gyógyszerkeresési hiba:', err);
         }
@@ -302,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 5. Gyógyszer Hozzáadása a Tálcához (AddItem - MEGGYÓGYÍTOTT ÚJ LOT MENTÉSI LOGIKA)
+  // 5. Gyógyszer Hozzáadása a Tálcához (AddItem)
   if (btnAddItem) {
     btnAddItem.addEventListener('click', async () => {
       if (!currentScannedMed) return;
@@ -325,20 +333,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      let selectedBatchId = lotSelect ? lotSelect.value : '';
       let finalBatchId = null;
 
       try {
-        // Ellenőrizzük, hogy a beírt LOT szám megegyezik-e a kiválasztott korábbi rekorddal
         const existingMatchingBatch = batchListForMed.find(
           b => b.lot_number.toLowerCase() === lotNum.toLowerCase() && b.expiry_date === expDate
         );
 
         if (existingMatchingBatch) {
-          // Ha pontosan megegyezik egy létezővel, használjuk annak az ID-ját
           finalBatchId = existingMatchingBatch.id;
         } else {
-          // HA ÚJ LOT-OT ÍRTAK BE: Mindig hozzunk létre új rekordot a batch_records táblában!
           const { data: newBatch, error: bErr } = await db
             .from('batch_records')
             .insert([{
@@ -413,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (currentTrayItems.length === 0) {
-        alert('A tálcára még nem vett fel gyógyszert!');
+        alert('A tálcára még nem vett fel gyógyszer!');
         return;
       }
 
