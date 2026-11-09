@@ -5,6 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DrugAssist Record - Ellenőrzés</title>
   <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* Görgethető modal beállítások */
+    .scrollable-modal {
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .scrollable-modal .modal-body {
+      overflow-y: auto;
+      max-height: calc(90vh - 130px);
+    }
+  </style>
 </head>
 <body>
 
@@ -42,8 +56,8 @@
 
   <!-- Modal: Tálca Ellenőrzése & Jóváhagyása -->
   <div id="verify-modal" class="modal">
-    <div class="modal-content" style="max-width: 900px; width: 95%;">
-      <div class="modal-header" style="background: #10b981; color: white; padding: 1rem; border-radius: 8px 8px 0 0;">
+    <div class="modal-content scrollable-modal" style="max-width: 900px; width: 95%;">
+      <div class="modal-header" style="background: #10b981; color: white; padding: 1rem; border-radius: 8px 8px 0 0; flex-shrink: 0;">
         <h3 style="margin:0;">Gyógyszerelés ellenőrzése: <span id="v-patient-name">--</span></h3>
         <span class="close-modal" id="btn-close-verify-modal" style="color:white; cursor:pointer; font-size: 1.8rem;">&times;</span>
       </div>
@@ -92,7 +106,7 @@
         </div>
       </div>
 
-      <div class="modal-footer" style="padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+      <div class="modal-footer" style="padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; border-top: 1px solid #e2e8f0; background: white; border-radius: 0 0 8px 8px;">
         <span id="role-warning-text" style="color: red; font-weight: bold;" class="hidden">Asszisztensként a jóváhagyás nem engedélyezett!</span>
         <button type="button" id="btn-approve-dispensing" class="btn btn-success btn-large" disabled style="opacity: 0.5; background: #10b981; border-color: #059669;">
           Jóváhagyás
