@@ -205,7 +205,7 @@
       <h2>Megjegyzés</h2>
       <div class="summary-section" style="padding-top: 0.25rem;">
         <div class="form-group" style="margin-bottom: 1.75rem;">
-          <textarea id="dispensing-notes" rows="2" placeholder="Opcionális megjegyzés a tálcához (pl. szilárd adagolási forma felezve)..." style="background: white; border-radius: 8px; border: 1px solid #cbd5e1;"></textarea>
+          <textarea id="dispensing-notes" rows="2" placeholder="Opcionális megjegyzés a tálcához..." style="background: white; border-radius: 8px; border: 1px solid #cbd5e1;"></textarea>
         </div>
 
         <button type="button" id="btn-save-dispensing" class="btn btn-large btn-primary" disabled style="width: 100%; padding: 1rem; font-size: 1.1rem; border-radius: 8px; margin-top: 0.5rem;">
@@ -219,7 +219,7 @@
   <div id="scan-modal" class="modal">
     <div class="modal-content" style="max-width: 680px; width: 95%;">
       <div class="modal-header">
-        <h3 style="margin:0;">Gyógyszer Beolvasása (Vonalkód / EAN)</h3>
+        <h3 style="margin:0;">Gyógyszer azonosítása vonalkóddal</h3>
         <span class="close-modal" id="btn-close-modal" style="cursor:pointer; font-size: 1.8rem;">&times;</span>
       </div>
 
@@ -246,7 +246,7 @@
 
           <!-- 1. LOT BUBORÉKOK ÉS RÖGZÍTÉS -->
           <div class="form-group">
-            <label style="font-weight: 600; color: #334155;">Válasszon korábbi gyári számot (LOT):</label>
+            <label style="font-weight: 600; color: #334155;">Válasszon korábbi gyári számot:</label>
             
             <select id="lot-select" class="hidden">
               <option value="">-- Válassz korábbi LOT-ot --</option>
@@ -259,21 +259,21 @@
 
           <!-- 2. ÚJ LOT RÖGZÍTÉS -->
           <div id="new-lot-inputs" class="new-lot-box" style="background: #f1f5f9; padding: 1rem; border-radius: 8px; margin-bottom: 1.25rem; border: 1px solid #cbd5e1;">
-            <div style="font-weight: 700; color: #1e293b; margin-bottom: 0.6rem; font-size: 0.95rem;">Új Gyári Szám (LOT) Rögzítése:</div>
+            <div style="font-weight: 700; color: #1e293b; margin-bottom: 0.6rem; font-size: 0.95rem;">Új gyári szám rögzítése:</div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
               <div class="form-group" style="margin-bottom: 0;">
-                <label for="new-lot-number" style="font-size: 0.85rem;">Gyári Szám (LOT)</label>
+                <label for="new-lot-number" style="font-size: 0.85rem;">Gyári szám</label>
                 <input type="text" id="new-lot-number" placeholder="Pl.: AB123456" style="background: white;">
               </div>
               <div class="form-group" style="margin-bottom: 0;">
-                <label for="new-expiry-date" style="font-size: 0.85rem;">Lejárati Dátum</label>
+                <label for="new-expiry-date" style="font-size: 0.85rem;">Lejárati dátum</label>
                 <input type="date" id="new-expiry-date" style="background: white;">
               </div>
             </div>
           </div>
 
           <!-- ADAGOLÁSI MÁTRIX (EGYMÁS MELLETT) -->
-          <label style="font-weight: 600; color: #334155;">Adagolás (Egység / Napszak):</label>
+          <label style="font-weight: 600; color: #334155;">Adagolás:</label>
           <div class="dose-grid-horizontal">
             <div class="dose-item-box">
               <span>Reggel</span>
