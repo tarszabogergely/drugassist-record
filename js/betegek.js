@@ -46,21 +46,73 @@ document.addEventListener('DOMContentLoaded', () => {
     userDisp.innerText = `${currentUser.full_name} (${currentUser.role === 'pharmacist' ? 'Gyógyszerész' : 'Asszisztens'})`;
   }
 
-  // 2. Betegek betöltése
+  // 2. Betegek betöltése és előzmény-osztályaik összegzése
   loadPatients();
 
   async function loadPatients() {
     try {
       tableBody.innerHTML = '<tr class="empty-row"><td colspan="6">Betegek betöltése...</td></tr>';
 
-      const { data, error } = await db
+      // 1. Betegek lekérése
+      const { data: patientsData, error: pErr } = await db
         .from('patients')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (pErr) throw pErr;
 
-      allPatients = data || [];
+      // 2. Gyógyszerelési rekordok lekérése a több osztály azonosításához
+      const { data: recordsData, error: rErr } = await db
+        .from('dispensing_records')
+        .select('patient_name, patient_taj, ward, bed_number');
+
+      if (rErr) console.warn('Rekordok lekérdezési figyelmeztetés:', rErr);
+
+      const records = recordsData || [];
+
+      // Mประกอบ patient objektum kiegészítése az eddigi osztályok listájával
+      allPatients = (patientsData || []).map(p => {
+        // Keressük a beteg rekordjait Név vagy TAJ alapján
+        const pRecords = records.filter(r => 
+          (p.taj_number && r.patient_taj === p.taj_number) || 
+          (r.patient_name && r.patient_name.toLowerCase() === p.name.toLowerCase())
+        );
+
+        // Egyedi osztályok és ágyszámok gyűjtése
+        const wardSet = new Set();
+        const bedSet = new Set();
+
+        if (p.ward) wardSet.add(p.ward);
+        if (p.bed_number) bedSet.add(p.bed_number);
+
+        pRecords.forEach(r => {
+          if (r.ward) wardSet.add(r.ward);
+          if (r.bed_number) bedSet.add(r.bed_number);
+        });
+
+        const uniqueWards = Array.from(wardSet);
+        const uniqueBeds = Array.from(bedSet);
+
+        // Osztály megjelenítési logika
+        let displayWard = p.ward || '-';
+        if (uniqueWards.length > 1) {
+          displayWard = `<span style="font-weight: bold; color: #0284c7;">Több osztály</span><br><small style="color: #64748b; font-style: italic;">(${uniqueWards.join(', ')})</small>`;
+        }
+
+        // Ágyszám megjelenítési logika
+        let displayBed = p.bed_number || '-';
+        if (uniqueBeds.length > 1) {
+          displayBed = `<span style="font-weight: 600; color: #64748b;">Több ágy</span>`;
+        }
+
+        return {
+          ...p,
+          displayWard,
+          displayBed,
+          allWardsText: uniqueWards.join(' ') // Kereséshez
+        };
+      });
+
       renderPatients(allPatients);
     } catch (err) {
       console.error('Betegek betöltési hibája:', err);
@@ -68,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Táblázat kirajzolása (Sima szöveggel + Szerkesztés és Előzmények gombokkal)
+  // Táblázat kirajzolása
   function renderPatients(patientsList) {
     if (patientsList.length === 0) {
       tableBody.innerHTML = '<tr class="empty-row"><td colspan="6">Nem található beteg a nyilvántartásban.</td></tr>';
@@ -79,8 +131,8 @@ document.addEventListener('DOMContentLoaded', () => {
       <tr>
         <td><strong>${p.name}</strong></td>
         <td>${p.taj_number || '-'}</td>
-        <td>${p.ward || '-'}</td>
-        <td>${p.bed_number || '-'}</td>
+        <td>${p.displayWard}</td>
+        <td>${p.displayBed}</td>
         <td>${new Date(p.created_at).toLocaleString('hu-HU')}</td>
         <td style="white-space: nowrap;">
           <button type="button" onclick="openEditModal('${p.id}')" class="btn btn-primary btn-sm" style="background:#3b82f6; border:none; margin-right:0.3rem;">✏️ Szerkesztés</button>
@@ -135,13 +187,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Live Search szűrés
+  // Live Search szűrés (bővítve a több osztályos kereséssel)
   if (searchInput) {
     searchInput.addEventListener('input', () => {
       const q = searchInput.value.toLowerCase().trim();
       const filtered = allPatients.filter(p => 
         (p.name && p.name.toLowerCase().includes(q)) ||
         (p.ward && p.ward.toLowerCase().includes(q)) ||
+        (p.allWardsText && p.allWardsText.toLowerCase().includes(q)) ||
         (p.taj_number && p.taj_number.toLowerCase().includes(q)) ||
         (p.bed_number && p.bed_number.toLowerCase().includes(q))
       );
@@ -156,10 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const parts = qrString.split('??').map(p => p.trim());
     if (parts.length === 4) {
-      // Régi formátum: Név??Osztály??Ágyszám??Időbélyeg
       return parts[3] || qrString;
     } else if (parts.length >= 5) {
-      // Új formátum: Név??TAJ??Osztály??Ágyszám??Időbélyeg
       return parts[4] || qrString;
     }
     return qrString;
