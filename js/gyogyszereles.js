@@ -260,6 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // 1. Buborékok HTML generálása
     if (lotBubblesWrapper) {
       lotBubblesWrapper.innerHTML = batches.map(b => {
         if (lotSelect) lotSelect.innerHTML += `<option value="${b.id}">${b.lot_number} (${b.expiry_date})</option>`;
@@ -267,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }).join('');
     }
 
-    // Eseménykezelők a LOT buborékokra
+    // 2. Eseménykezelők hozzárendelése a kattintásokhoz
     document.querySelectorAll('.lot-bubble').forEach(btn => {
       btn.addEventListener('click', () => {
         const selectedId = btn.getAttribute('data-batch-id');
@@ -291,16 +292,20 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // AMIKOR PONTOSAN 1 DB LOT RECORD LÉTEZIK: AUTOMATIKUS KIJELÖLÉS ÉS KITÖLTÉS
+    // 3. AUTOMATIKUS KIJELÖLÉS (Ha pontosan 1 db LOT rekord létezik)
     if (batches.length === 1) {
       const singleBatch = batches[0];
-      const singleBubble = document.querySelector(`.lot-bubble[data-batch-id="${singleBatch.id}"]`);
-      if (singleBubble) {
-        singleBubble.classList.add('selected');
-      }
+
+      // Értékek azonnali beállítása az input mezőkbe
       if (lotSelect) lotSelect.value = singleBatch.id;
       if (newLotNumber) newLotNumber.value = singleBatch.lot_number;
       if (newExpiryDate) newExpiryDate.value = singleBatch.expiry_date;
+
+      // Kék kiemelés rátétele a buborékra
+      const targetBubble = lotBubblesWrapper.querySelector(`.lot-bubble[data-batch-id="${singleBatch.id}"]`);
+      if (targetBubble) {
+        targetBubble.classList.add('selected');
+      }
     }
   }
 
