@@ -84,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const parts = cleanQr.split('??').map(p => p.trim());
 
     if (parts.length === 4) {
-      // Régi formátum: Név??Osztály??Ágyszám??Azonosító
       currentPatient = {
         name: parts[0] || 'Névtelen Beteg',
         taj: null,
@@ -94,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
         rawQr: rawVal
       };
     } else if (parts.length >= 5) {
-      // Új formátum: Név??TAJ??Osztály??Ágyszám??Azonosító
       currentPatient = {
         name: parts[0] || 'Névtelen Beteg',
         taj: parts[1] || null,
@@ -260,7 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // 1. Buborékok HTML generálása
     if (lotBubblesWrapper) {
       lotBubblesWrapper.innerHTML = batches.map(b => {
         if (lotSelect) lotSelect.innerHTML += `<option value="${b.id}">${b.lot_number} (${b.expiry_date})</option>`;
@@ -268,7 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }).join('');
     }
 
-    // 2. Eseménykezelők hozzárendelése a kattintásokhoz
     document.querySelectorAll('.lot-bubble').forEach(btn => {
       btn.addEventListener('click', () => {
         const selectedId = btn.getAttribute('data-batch-id');
@@ -292,16 +288,13 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // 3. AUTOMATIKUS KIJELÖLÉS (Ha pontosan 1 db LOT rekord létezik)
+    // Ha 1 db LOT van, automatikusan kitölti
     if (batches.length === 1) {
       const singleBatch = batches[0];
-
-      // Értékek azonnali beállítása az input mezőkbe
       if (lotSelect) lotSelect.value = singleBatch.id;
       if (newLotNumber) newLotNumber.value = singleBatch.lot_number;
       if (newExpiryDate) newExpiryDate.value = singleBatch.expiry_date;
 
-      // Kék kiemelés rátétele a buborékra
       const targetBubble = lotBubblesWrapper.querySelector(`.lot-bubble[data-batch-id="${singleBatch.id}"]`);
       if (targetBubble) {
         targetBubble.classList.add('selected');
@@ -309,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 5. Gyógyszer Hozzáadása a Tálcához (AddItem)
+  // 5. Gyógyszer Hozzáadása a Tálcához (AddItem - MEGGYÓGYÍTOTT ÚJ LOT MENTÉSI LOGIKA)
   if (btnAddItem) {
     btnAddItem.addEventListener('click', async () => {
       if (!currentScannedMed) return;
@@ -332,10 +325,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      let batchId = lotSelect ? lotSelect.value : '';
+      let selectedBatchId = lotSelect ? lotSelect.value : '';
+      let finalBatchId = null;
 
       try {
-        if (!batchId) {
+        // Ellenőrizzük, hogy a beírt LOT szám megegyezik-e a kiválasztott korábbi rekorddal
+        const existingMatchingBatch = batchListForMed.find(
+          b => b.lot_number.toLowerCase() === lotNum.toLowerCase() && b.expiry_date === expDate
+        );
+
+        if (existingMatchingBatch) {
+          // Ha pontosan megegyezik egy létezővel, használjuk annak az ID-ját
+          finalBatchId = existingMatchingBatch.id;
+        } else {
+          // HA ÚJ LOT-OT ÍRTAK BE: Mindig hozzunk létre új rekordot a batch_records táblában!
           const { data: newBatch, error: bErr } = await db
             .from('batch_records')
             .insert([{
@@ -347,14 +350,14 @@ document.addEventListener('DOMContentLoaded', () => {
             .single();
 
           if (bErr) throw bErr;
-          batchId = newBatch.id;
+          finalBatchId = newBatch.id;
         }
 
         currentTrayItems.push({
           medication_id: currentScannedMed.id,
           medication_name: currentScannedMed.name,
           morphology: currentScannedMed.morphology,
-          batch_id: batchId,
+          batch_id: finalBatchId,
           lot_number: lotNum,
           expiry_date: expDate,
           morning: mDose,
@@ -367,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
         scanModal.style.display = 'none';
       } catch (err) {
         console.error('Tétel hozzáadási hiba:', err);
-        alert('Hiba történt a tétel rögzítésekor!');
+        alert(`Hiba történt a tétel rögzítésekor!\n\nRészletek: ${err.message}`);
       }
     });
   }
@@ -449,8 +452,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (itemsErr) throw itemsErr;
 
         alert('Tálca sikeresen lezárva és elmentve!');
-        
-        // Form és adatok ürítése
         resetDispensingPage();
 
       } catch (err) {
