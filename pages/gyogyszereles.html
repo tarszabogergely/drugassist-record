@@ -240,9 +240,39 @@
             </p>
           </div>
 
-          <!-- 1. ADAGOLÁSI MÁTRIX (ELŐRE HOZVA A GYORSABB TABULÁTOROZÁSÉRT) -->
+          <hr class="dotted-divider">
+
+          <!-- 1. LOT BUBORÉKOK ÉS RÖGZÍTÉS (VISSZAÁLLÍTVA EREDETI SORRENDBE) -->
+          <div class="form-group">
+            <label style="font-weight: 600; color: #334155;">Válasszon korábbi gyári számot:</label>
+            
+            <select id="lot-select" class="hidden">
+              <option value="">-- Válassz korábbi LOT-ot --</option>
+            </select>
+
+            <div id="lot-bubbles-wrapper" class="lot-bubbles-container">
+              <span style="color: #94a3b8; font-style: italic; font-size: 0.88rem;">Nincs rögzített korábbi LOT.</span>
+            </div>
+          </div>
+
+          <!-- 2. ÚJ LOT RÖGZÍTÉS -->
+          <div id="new-lot-inputs" class="new-lot-box" style="background: #f1f5f9; padding: 1rem; border-radius: 8px; margin-bottom: 1.25rem; border: 1px solid #cbd5e1;">
+            <div style="font-weight: 700; color: #1e293b; margin-bottom: 0.6rem; font-size: 0.95rem;">Új gyári szám rögzítése:</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="new-lot-number" style="font-size: 0.85rem;">Gyári szám</label>
+                <input type="text" id="new-lot-number" placeholder="Pl.: AB123456" style="background: white;">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="new-expiry-date" style="font-size: 0.85rem;">Lejárati dátum</label>
+                <input type="date" id="new-expiry-date" style="background: white;">
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. ADAGOLÁSI MÁTRIX -->
           <label style="font-weight: 600; color: #334155;">Adagolás:</label>
-          <div class="dose-grid-horizontal" style="margin-bottom: 1.25rem;">
+          <div class="dose-grid-horizontal">
             <div class="dose-item-box">
               <span>Reggel</span>
               <input type="number" id="dose-morning" value="0" step="0.5" min="0">
@@ -258,36 +288,6 @@
             <div class="dose-item-box">
               <span>Éjjel</span>
               <input type="number" id="dose-night" value="0" step="0.5" min="0">
-            </div>
-          </div>
-
-          <hr class="dotted-divider">
-
-          <!-- 2. LOT BUBORÉKOK ÉS RÖGZÍTÉS -->
-          <div class="form-group">
-            <label style="font-weight: 600; color: #334155;">Válasszon korábbi gyári számot:</label>
-            
-            <select id="lot-select" class="hidden">
-              <option value="">-- Válassz korábbi LOT-ot --</option>
-            </select>
-
-            <div id="lot-bubbles-wrapper" class="lot-bubbles-container">
-              <span style="color: #94a3b8; font-style: italic; font-size: 0.88rem;">Nincs rögzített korábbi LOT.</span>
-            </div>
-          </div>
-
-          <!-- 3. ÚJ LOT RÖGZÍTÉS -->
-          <div id="new-lot-inputs" class="new-lot-box" style="background: #f1f5f9; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid #cbd5e1;">
-            <div style="font-weight: 700; color: #1e293b; margin-bottom: 0.6rem; font-size: 0.95rem;">Új gyári szám rögzítése:</div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-              <div class="form-group" style="margin-bottom: 0;">
-                <label for="new-lot-number" style="font-size: 0.85rem;">Gyári szám</label>
-                <input type="text" id="new-lot-number" placeholder="Pl.: AB123456" style="background: white;">
-              </div>
-              <div class="form-group" style="margin-bottom: 0;">
-                <label for="new-expiry-date" style="font-size: 0.85rem;">Lejárati dátum</label>
-                <input type="date" id="new-expiry-date" style="background: white;">
-              </div>
             </div>
           </div>
 
