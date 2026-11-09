@@ -44,7 +44,7 @@
   <div id="verify-modal" class="modal">
     <div class="modal-content" style="max-width: 900px; width: 95%;">
       <div class="modal-header" style="background: #10b981; color: white; padding: 1rem; border-radius: 8px 8px 0 0;">
-        <h3 style="margin:0;">Tálca Ellenőrzése: <span id="v-patient-name">--</span></h3>
+        <h3 style="margin:0;">Gyógyszerelés ellenőrzése: <span id="v-patient-name">--</span></h3>
         <span class="close-modal" id="btn-close-verify-modal" style="color:white; cursor:pointer; font-size: 1.8rem;">&times;</span>
       </div>
 
@@ -53,17 +53,17 @@
         <div class="patient-details-box" style="margin-bottom: 1.5rem; background: #e9ecef; padding: 1rem; border-radius: 6px;">
           <div><strong>Osztály / Ágy:</strong> <span id="v-ward-bed">-</span></div>
           <div><strong>Rögzítés ideje:</strong> <span id="v-created-at">-</span></div>
-          <div><strong>Asszisztensi megjegyzés:</strong> <span id="v-notes-display" style="font-style: italic;">-</span></div>
+          <div><strong>Megjegyzés:</strong> <span id="v-notes-display" style="font-style: italic;">-</span></div>
         </div>
 
         <!-- Mátrix Táblázat -->
-        <h4 style="margin-bottom: 0.5rem;">Rögzített Gyógyszerek és Morfológia:</h4>
+        <h4 style="margin-bottom: 0.5rem;">Rögzített gyógyszerek és morfológia:</h4>
         <div class="table-wrapper" style="margin-bottom: 1.5rem;">
           <table class="data-table">
             <thead>
               <tr>
                 <th>Gyógyszernév</th>
-                <th>Morfológia (Ellenőrizendő!)</th>
+                <th>Morfológia</th>
                 <th>LOT / Lejárat</th>
                 <th>Reggel</th>
                 <th>Délben</th>
@@ -79,7 +79,7 @@
 
         <!-- QR Kódos Igazolás a Jóváhagyáshoz -->
         <div class="card" style="border: 2px solid #10b981; background: #f0fdf4; padding: 1rem;">
-          <h4 style="color: #047857; margin-bottom: 0.5rem;">Jóváhagyási Igazolás</h4>
+          <h4 style="color: #047857; margin-bottom: 0.5rem;">Jóváhagyási igazolás</h4>
           <p style="font-size: 0.9rem; margin-bottom: 0.5rem;">
             A jóváhagyáshoz olvassa be a tálcán lévő QR kódot! 
             <br>
@@ -95,7 +95,7 @@
       <div class="modal-footer" style="padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
         <span id="role-warning-text" style="color: red; font-weight: bold;" class="hidden">Asszisztensként a jóváhagyás nem engedélyezett!</span>
         <button type="button" id="btn-approve-dispensing" class="btn btn-success btn-large" disabled style="opacity: 0.5; background: #10b981; border-color: #059669;">
-          ✓ Tálca Ellenőrizve és Jóváhagyva
+          Jóváhagyás
         </button>
       </div>
     </div>
