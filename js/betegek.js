@@ -149,6 +149,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Segédfunkció a QR azonosító / Gyártási szám kibontására (4 és 5 elemes formátum támogatás)
+  function extractBatchIdentifier(qrString) {
+    if (!qrString) return '-';
+    if (!qrString.includes('??')) return qrString;
+
+    const parts = qrString.split('??').map(p => p.trim());
+    if (parts.length === 4) {
+      // Régi formátum: Név??Osztály??Ágyszám??Időbélyeg
+      return parts[3] || qrString;
+    } else if (parts.length >= 5) {
+      // Új formátum: Név??TAJ??Osztály??Ágyszám??Időbélyeg
+      return parts[4] || qrString;
+    }
+    return qrString;
+  }
+
   // 4. Beteg előzményeinek megtekintése
   window.viewHistory = async function(patientName) {
     hPatientName.innerText = patientName;
@@ -173,14 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isVerified = r.status === 'verified';
         const badgeStyle = isVerified ? 'background:#10b981; color:white;' : 'background:#f59e0b; color:white;';
         const statusText = isVerified ? '✓ Ellenőrizve' : 'Várakozik';
-
-        let batchIdDisplay = '-';
-        if (r.qr_identifier && r.qr_identifier.includes('??')) {
-          const parts = r.qr_identifier.split('??');
-          batchIdDisplay = parts[3] || r.qr_identifier;
-        } else if (r.qr_identifier) {
-          batchIdDisplay = r.qr_identifier;
-        }
+        const batchIdDisplay = extractBatchIdentifier(r.qr_identifier);
 
         return `
           <tr class="clickable-row" onclick="openTrayDetails('${r.id}')">
@@ -220,15 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (rErr) throw rErr;
 
       detailPatient.innerText = rec.patient_name;
-      
-      let bId = '-';
-      if (rec.qr_identifier && rec.qr_identifier.includes('??')) {
-        bId = rec.qr_identifier.split('??')[3] || rec.qr_identifier;
-      } else {
-        bId = rec.qr_identifier || '-';
-      }
-
-      detailBarcode.innerText = bId;
+      detailBarcode.innerText = extractBatchIdentifier(rec.qr_identifier);
       detailUser.innerText = rec.dispensed_by || '-';
       detailStatus.innerText = rec.status === 'verified' ? '✓ Ellenőrizve' : 'Várakozik';
 
