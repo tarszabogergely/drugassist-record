@@ -53,11 +53,33 @@ document.addEventListener('DOMContentLoaded', () => {
     userDisp.innerText = `${currentUser.full_name} (${currentUser.role === 'pharmacist' ? 'Gyógyszerész' : 'Asszisztens'})`;
   }
 
-  // Karakterkódolási hiba javító segédfunkció
+  // Karakterkódolási hiba javító segédfunkció (Windows-1250 -> UTF-8 visszaállítás)
   function fixUtf8Encoding(str) {
     if (!str) return str;
     try {
-      return decodeURIComponent(escape(str));
+      const win1250Reverse = {
+        '€': 0x80, '‚': 0x82, '„': 0x84, '…': 0x85, '†': 0x86, '‡': 0x87,
+        '‰': 0x89, 'Š': 0x8A, '‹': 0x8B, 'Ś': 0x8C, 'Ť': 0x8D, 'Ž': 0x8E,
+        'Ź': 0x8F, '‘': 0x91, '’': 0x92, '“': 0x93, '”': 0x94, '•': 0x95,
+        '–': 0x96, '—': 0x97, '™': 0x99, 'š': 0x9A, '›': 0x9B, 'ś': 0x9C,
+        'ť': 0x9D, 'ž': 0x9E, 'ź': 0x9F, 'ˇ': 0xA1, '˘': 0xA2, 'Ł': 0xA3,
+        'Ą': 0xA5, 'Ş': 0xAA, 'Ż': 0xAF, '˛': 0xB2, 'ł': 0xB3, 'ľ': 0xB5,
+        'ą': 0xB9, 'ş': 0xBA, 'Ľ': 0xBC, '˝': 0xBD, 'ľ': 0xBE, 'ż': 0xBF,
+        'Ŕ': 0xC0, 'Ă': 0xC3, 'Ĺ': 0xC5, 'Ć': 0xC6, 'Č': 0xC8, 'Ę': 0xCA,
+        'Ě': 0xCC, 'Ď': 0xCF, 'Đ': 0xD0, 'Ń': 0xD1, 'Ň': 0xD2, 'Ő': 0xD5,
+        'Ř': 0xD8, 'Ů': 0xD9, 'Ű': 0xDB, 'Ţ': 0xDE, 'ŕ': 0xE0, 'ă': 0xE3,
+        'ĺ': 0xE5, 'ć': 0xE6, 'č': 0xE8, 'ę': 0xEA, 'ě': 0xEC, 'ď': 0xEF,
+        'đ': 0xF0, 'ń': 0xF1, 'ň': 0xF2, 'ő': 0xF5, 'ř': 0xF8, 'ů': 0xF9,
+        'ű': 0xFB, 'ţ': 0xFE, '˙': 0xFF
+      };
+      const bytes = new Uint8Array(str.length);
+      for (let i = 0; i < str.length; i++) {
+        const ch = str[i];
+        const code = str.charCodeAt(i);
+        bytes[i] = win1250Reverse[ch] !== undefined ? win1250Reverse[ch] : (code & 0xFF);
+      }
+      const decoded = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+      return decoded;
     } catch (e) {
       return str;
     }
